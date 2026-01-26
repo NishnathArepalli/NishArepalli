@@ -1,0 +1,1449 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pickup Team Balancer</title>
+  <style>
+    :root { --bg:#0b1020; --card:#121a33; --muted:#9fb0ff; --text:#e9eeff; --line:#24305a; --ok:#21c55d; --warn:#f59e0b; --bad:#ef4444; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:linear-gradient(120deg,#070b16,#0b1020);color:var(--text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:16px}
+    .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+    .title{font-weight:800;font-size:20px}
+    .sub{color:rgba(233,238,255,.75);font-size:13px;margin-top:4px}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-top:14px}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+    .card{background:rgba(18,26,51,.92);border:1px solid rgba(36,48,90,.65);border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    h2{margin:0 0 10px 0;font-size:16px}
+    label{display:block;font-size:12px;color:rgba(233,238,255,.75);margin-bottom:6px}
+    input,select,button,textarea{
+      width:100%;border-radius:10px;border:1px solid rgba(36,48,90,.9);
+      background:rgba(8,12,25,.7);color:var(--text);padding:10px;outline:none
+    }
+    input::placeholder{color:rgba(233,238,255,.45)}
+    button{cursor:pointer;font-weight:700}
+    button.primary{background:linear-gradient(90deg,#3b82f6,#6366f1);border:none}
+    button.ghost{background:transparent}
+    button.danger{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.35)}
+    button.small{padding:8px 10px;font-size:13px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+    .row > *{flex:1;min-width:140px}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid rgba(36,48,90,.8);background:rgba(8,12,25,.5);font-size:12px;color:rgba(233,238,255,.85)}
+    .divider{height:1px;background:rgba(36,48,90,.65);margin:12px 0}
+    .note{font-size:12px;color:rgba(233,238,255,.72);line-height:1.35}
+    .list{display:flex;flex-direction:column;gap:8px}
+    .item{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:12px;border:1px solid rgba(36,48,90,.65);background:rgba(8,12,25,.45)}
+    .meta{flex:1}
+    .name{font-weight:800}
+    .mini{font-size:12px;color:rgba(233,238,255,.75);margin-top:2px}
+    .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+    .tag{font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid rgba(36,48,90,.7);background:rgba(18,26,51,.55);color:rgba(233,238,255,.85)}
+    .teamGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    @media(max-width:700px){.teamGrid{grid-template-columns:1fr}}
+    .teamCard{border-radius:14px;border:1px solid rgba(36,48,90,.65);background:rgba(8,12,25,.45);padding:12px}
+    .teamHeader{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+    .teamTitle{font-weight:900}
+    .score{font-size:12px;color:rgba(233,238,255,.8)}
+    .playerRow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed rgba(36,48,90,.5)}
+    .playerRow:last-child{border-bottom:none}
+    .right{text-align:right;font-size:12px;color:rgba(233,238,255,.8);min-width:92px}
+    .kpiRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .kpi{flex:1;min-width:160px;border-radius:12px;border:1px solid rgba(36,48,90,.65);background:rgba(18,26,51,.55);padding:10px}
+    .k{font-size:12px;color:rgba(233,238,255,.75)}
+    .v{font-size:16px;font-weight:900;margin-top:4px}
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+    .inline{display:flex;gap:8px;align-items:center}
+    .inline input[type="checkbox"]{width:auto;transform:translateY(1px)}
+    .toggleRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .toggleRow .pill{cursor:pointer;user-select:none}
+    .btnGroup{display:flex;gap:6px;flex-wrap:wrap}
+    .rateBtn{
+      width:auto;flex:0 0 auto;padding:8px 10px;border-radius:10px;
+      border:1px solid rgba(36,48,90,.85);
+      background:rgba(8,12,25,.55);
+      color:rgba(233,238,255,.9);
+      font-size:13px;
+      min-width:38px;
+      text-align:center;
+    }
+    .rateBtn.active{background:linear-gradient(90deg,#22c55e,#3b82f6);border:none}
+    .smallInput{padding:8px 10px;font-size:13px}
+    .sectionTitle{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+    .dragHint{opacity:.85}
+    .dropTarget{outline:2px dashed rgba(99,102,241,.75);outline-offset:4px;border-radius:10px}
+    .muted{opacity:.8}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="title">Pickup Team Balancer</div>
+        <div class="sub">No login. Saves locally on this device. Export/Import to move it to another phone.</div>
+      </div>
+      <div class="row" style="min-width:520px">
+        <div style="flex:1.2;min-width:220px">
+          <label style="margin-bottom:6px">Group code (shared roster)</label>
+          <input id="groupCode" placeholder="e.g., SATURDAYRUN" />
+        </div>
+        <div style="min-width:140px">
+          <label style="margin-bottom:6px">Cloud</label>
+          <button id="joinGroupBtn" class="small primary">Join / Create</button>
+        </div>
+        <div style="min-width:180px">
+          <label style="margin-bottom:6px">Status</label>
+          <div id="cloudStatus" class="pill" style="width:100%;justify-content:center">Local only</div>
+        </div>
+        <button id="exportBtn" class="small ghost">Export Players</button>
+        <button id="importBtn" class="small ghost">Import Players</button>
+        <input id="importFile" type="file" accept="application/json" style="display:none" />
+      </div>
+        <button id="exportBtn" class="small ghost">Export Players</button>
+        <button id="importBtn" class="small ghost">Import Players</button>
+        <input id="importFile" type="file" accept="application/json" style="display:none" />
+      </div>
+    </div>
+
+    <div id="errorBox" class="card" style="display:none;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.08);margin-top:12px">
+      <div style="font-weight:800">Action needed</div>
+      <div id="errorText" class="note" style="margin-top:6px"></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="sectionTitle">
+          <h2 style="margin:0">Player Database</h2>
+          <div class="pill" id="advancedToggle" title="Show/hide extra ratings and tags">Advanced: Off</div>
+        </div>
+
+        <div class="row">
+          <div style="flex:1.2">
+            <label>Name</label>
+            <input id="pName" placeholder="e.g., Nish" />
+          </div>
+          <div>
+            <label>Preset (optional)</label>
+            <select id="pPreset">
+              <option value="">None</option>
+              <option value="shooter">Shooter</option>
+              <option value="lock">Lockdown Defender</option>
+              <option value="big">Big</option>
+              <option value="slasher">Slasher</option>
+              <option value="all">All-around</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div>
+            <label>Offense (1–10)</label>
+            <div id="offBtns" class="btnGroup"></div>
+          </div>
+          <div>
+            <label>Defense (1–10)</label>
+            <div id="defBtns" class="btnGroup"></div>
+          </div>
+          <div>
+            <label>Rebounding (1–10)</label>
+            <div id="rebBtns" class="btnGroup"></div>
+          </div>
+        </div>
+
+        <div id="advancedBox" style="display:none;margin-top:10px">
+          <div class="row">
+            <div>
+              <label>Hustle / Stamina (1–10)</label>
+              <div id="husBtns" class="btnGroup"></div>
+            </div>
+            <div>
+              <label>Position tag (optional)</label>
+              <select id="pPos">
+                <option value="">None</option>
+                <option value="G">Guard</option>
+                <option value="W">Wing</option>
+                <option value="B">Big</option>
+              </select>
+              <div class="note" style="margin-top:6px">Used as a light “size” proxy to avoid teams stacked with all bigs/guards.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div style="flex:2">
+            <label>Notes (optional)</label>
+            <input id="pNotes" placeholder="e.g., Big / Shooter / Ball handler" />
+          </div>
+          <div class="inline" style="justify-content:end">
+            <button id="saveBtn" class="primary">Add Player</button>
+            <button id="cancelBtn" class="ghost" style="display:none;width:auto">Cancel</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row" style="margin-bottom:10px;align-items:center">
+          <div class="pill"><span style="opacity:.8">Selected today:</span> <strong id="selCount">0</strong></div>
+          <div class="pill"><span style="opacity:.8">Needed for run:</span> <strong id="needCount">10</strong></div>
+          <div class="pill"><span style="opacity:.8">Weights:</span> <strong id="weightsText">Off 40% / Def 40% / Reb 20%</strong></div>
+        </div>
+
+        <div id="playerList" class="list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Generate Teams</h2>
+
+        <div class="row">
+          <div>
+            <label>Game format</label>
+            <select id="gameSize">
+              <option value="3">3v3</option>
+              <option value="4">4v4</option>
+              <option value="5" selected>5v5</option>
+            </select>
+          </div>
+          <div>
+            <label># of teams</label>
+            <select id="numTeams">
+              <option value="2" selected>2 teams</option>
+              <option value="3">3 teams (rotate)</option>
+              <option value="4">4 teams (rotate)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="toggleRow" style="margin-top:10px">
+          <div class="pill" id="captainToggle" title="Enable drag-and-drop editing of teams">Captain Mode: Off</div>
+          <div class="pill" id="stabilityToggle" title="Prefer minimal changes on regenerate">Stability: Off</div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button id="genBtn" class="primary">Generate Teams</button>
+          <button id="regenBtn" class="ghost">Regenerate</button>
+          <button id="clearLocksBtn" class="ghost">Clear Locks</button>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button id="copyBtn" class="small ghost">Copy Teams</button>
+          <button id="shareBtn" class="small ghost">Share</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="card" style="background:rgba(8,12,25,.35);margin-bottom:12px">
+          <div class="sectionTitle">
+            <div style="font-weight:800">Balancing Weights</div>
+            <select id="weightPreset" class="smallInput" style="max-width:220px">
+              <option value="custom">Custom</option>
+              <option value="default">Default (40/40/20)</option>
+              <option value="defense">Defense First</option>
+              <option value="offense">Run & Gun</option>
+              <option value="rebounding">Boards Matter</option>
+              <option value="balanced">Balanced (33/33/34)</option>
+            </select>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <div>
+              <label>Offense weight: <strong id="wOffTxt">40%</strong></label>
+              <input id="wOff" type="range" min="0" max="100" value="40" />
+            </div>
+            <div>
+              <label>Defense weight: <strong id="wDefTxt">40%</strong></label>
+              <input id="wDef" type="range" min="0" max="100" value="40" />
+            </div>
+            <div>
+              <label>Rebounding weight: <strong id="wRebTxt">20%</strong></label>
+              <input id="wReb" type="range" min="0" max="100" value="20" />
+            </div>
+          </div>
+
+          <div id="hustleWeightBox" style="display:none;margin-top:10px">
+            <div>
+              <label>Hustle weight: <strong id="wHusTxt">0%</strong></label>
+              <input id="wHus" type="range" min="0" max="100" value="0" />
+              <div class="note" style="margin-top:6px">Only applied when Advanced is On and players have Hustle ratings.</div>
+            </div>
+          </div>
+
+          <div class="note" style="margin-top:10px">
+            Sliders auto-normalize to 100%. Presets are optional; pick what matches the run.
+          </div>
+        </div>
+
+        <div id="results"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Notes</h2>
+      <div class="note">
+        If you later want the whole group to share the same roster (shared link + cloud DB), this can be upgraded cleanly.
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async () => {
+  // Optional cloud sync via Supabase.
+  // To enable: paste your values from Supabase Settings → API.
+  const SUPABASE_URL = "https://qkfgnsytldnhenhfqhvr.supabase.co";        // e.g., "https://xxxx.supabase.co"
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZmduc3l0bGRuaGVuaGZxaHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTIwOTEsImV4cCI6MjA4NTAyODA5MX0.I9JcTBoZpxT9eTz8dGP_7kXeH0fqu7A_qJ5NK7HknGE";   // anon public key
+  const supabaseConfigured = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+  const supabase = (supabaseConfigured && window.supabase)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+
+  const STORAGE_KEY_PLAYERS = "pickup_team_balancer_v2_players_vanilla";
+  const STORAGE_KEY_SETTINGS = "pickup_team_balancer_v2_settings";
+  const STORAGE_KEY_SESSION  = "pickup_team_balancer_v2_session";
+
+  const defaults = {
+    weights: { offense: 40, defense: 40, rebounding: 20, hustle: 0 }, // %; will be normalized
+    advanced: false,
+    captain: false,
+    stability: false,
+    weightPreset: "default"
+  };
+
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const uid = () => Math.random().toString(36).slice(2,10) + "-" + Date.now().toString(36);
+
+  const els = {
+    errorBox: document.getElementById("errorBox"),
+    errorText: document.getElementById("errorText"),
+
+    groupCode: document.getElementById("groupCode"),
+    joinGroupBtn: document.getElementById("joinGroupBtn"),
+    cloudStatus: document.getElementById("cloudStatus"),
+    playerList: document.getElementById("playerList"),
+    selCount: document.getElementById("selCount"),
+    needCount: document.getElementById("needCount"),
+    weightsText: document.getElementById("weightsText"),
+
+    pName: document.getElementById("pName"),
+    pPreset: document.getElementById("pPreset"),
+    pNotes: document.getElementById("pNotes"),
+    pPos: document.getElementById("pPos"),
+    saveBtn: document.getElementById("saveBtn"),
+    cancelBtn: document.getElementById("cancelBtn"),
+
+    offBtns: document.getElementById("offBtns"),
+    defBtns: document.getElementById("defBtns"),
+    rebBtns: document.getElementById("rebBtns"),
+    husBtns: document.getElementById("husBtns"),
+
+    advancedToggle: document.getElementById("advancedToggle"),
+    advancedBox: document.getElementById("advancedBox"),
+
+    gameSize: document.getElementById("gameSize"),
+    numTeams: document.getElementById("numTeams"),
+    genBtn: document.getElementById("genBtn"),
+    regenBtn: document.getElementById("regenBtn"),
+    clearLocksBtn: document.getElementById("clearLocksBtn"),
+    results: document.getElementById("results"),
+
+    exportBtn: document.getElementById("exportBtn"),
+    importBtn: document.getElementById("importBtn"),
+    importFile: document.getElementById("importFile"),
+
+    // weights
+    weightPreset: document.getElementById("weightPreset"),
+    wOff: document.getElementById("wOff"),
+    wDef: document.getElementById("wDef"),
+    wReb: document.getElementById("wReb"),
+    wHus: document.getElementById("wHus"),
+    wOffTxt: document.getElementById("wOffTxt"),
+    wDefTxt: document.getElementById("wDefTxt"),
+    wRebTxt: document.getElementById("wRebTxt"),
+    wHusTxt: document.getElementById("wHusTxt"),
+    hustleWeightBox: document.getElementById("hustleWeightBox"),
+
+    // extras
+    captainToggle: document.getElementById("captainToggle"),
+    stabilityToggle: document.getElementById("stabilityToggle"),
+    copyBtn: document.getElementById("copyBtn"),
+    shareBtn: document.getElementById("shareBtn"),
+  };
+
+  const setError = (msg) => {
+    if (!msg) { els.errorBox.style.display = "none"; els.errorText.textContent = ""; return; }
+    els.errorBox.style.display = "block";
+    els.errorText.textContent = msg;
+  };
+
+  const loadJSON = (key, fallback) => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return fallback;
+      return JSON.parse(raw);
+    } catch { return fallback; }
+  };
+  const saveJSON = (key, val) => localStorage.setItem(key, JSON.stringify(val));
+
+  const normalizeWeights = (w) => {
+    const o = clamp(Number(w.offense ?? 0), 0, 100);
+    const d = clamp(Number(w.defense ?? 0), 0, 100);
+    const r = clamp(Number(w.rebounding ?? 0), 0, 100);
+    const h = clamp(Number(w.hustle ?? 0), 0, 100);
+    const sum = o + d + r + h;
+    if (sum <= 0) return { offense: 40, defense: 40, rebounding: 20, hustle: 0 };
+    // normalize to 100
+    return {
+      offense: (o / sum) * 100,
+      defense: (d / sum) * 100,
+      rebounding: (r / sum) * 100,
+      hustle: (h / sum) * 100
+    };
+  };
+
+  let settings = (() => {
+    const s = loadJSON(STORAGE_KEY_SETTINGS, defaults);
+    return { ...defaults, ...s, weights: normalizeWeights(s.weights || defaults.weights) };
+  })();
+
+  let session = (() => {
+    const s = loadJSON(STORAGE_KEY_SESSION, { selectedIds: null });
+    return s || { selectedIds: null };
+  })();
+
+
+const STORAGE_KEY_CLOUD = "pickup_team_balancer_v2_cloud";
+
+const cloudCfg = (() => {
+  const c = loadJSON(STORAGE_KEY_CLOUD, { groupCode: "", groupId: null });
+  return c || { groupCode: "", groupId: null };
+})();
+
+  // Draft ratings (button-driven)
+  let draft = { offense: 6, defense: 6, rebounding: 6, hustle: 6 };
+
+  const makeRateButtons = (rootEl, key) => {
+    rootEl.innerHTML = "";
+    for (let i=1;i<=10;i++){
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "rateBtn" + (draft[key] === i ? " active" : "");
+      b.textContent = String(i);
+      b.addEventListener("click", () => {
+        draft[key] = i;
+        renderDraftButtons();
+        // switching off preset when manual adjustment happens
+        els.pPreset.value = "";
+      });
+      rootEl.appendChild(b);
+    }
+  };
+
+  const renderDraftButtons = () => {
+    const update = (rootEl, key) => {
+      Array.from(rootEl.children).forEach((btn, idx) => {
+        const val = idx + 1;
+        btn.classList.toggle("active", draft[key] === val);
+      });
+    };
+    update(els.offBtns, "offense");
+    update(els.defBtns, "defense");
+    update(els.rebBtns, "rebounding");
+    update(els.husBtns, "hustle");
+  };
+
+  makeRateButtons(els.offBtns, "offense");
+  makeRateButtons(els.defBtns, "defense");
+  makeRateButtons(els.rebBtns, "rebounding");
+  makeRateButtons(els.husBtns, "hustle");
+  renderDraftButtons();
+
+  const applyPreset = (preset) => {
+    const P = {
+      shooter:  { offense: 8, defense: 5, rebounding: 5, hustle: 6 },
+      lock:     { offense: 5, defense: 9, rebounding: 6, hustle: 7 },
+      big:      { offense: 6, defense: 7, rebounding: 9, hustle: 6 },
+      slasher:  { offense: 8, defense: 6, rebounding: 6, hustle: 7 },
+      all:      { offense: 7, defense: 7, rebounding: 7, hustle: 7 },
+    };
+    const v = P[preset];
+    if (!v) return;
+    draft.offense = v.offense;
+    draft.defense = v.defense;
+    draft.rebounding = v.rebounding;
+    draft.hustle = v.hustle;
+    renderDraftButtons();
+  };
+
+  // Local players
+const loadPlayersLocal = () => {
+  const parsed = loadJSON(STORAGE_KEY_PLAYERS, []);
+  return Array.isArray(parsed) ? parsed : [];
+};
+const savePlayersLocal = (players) => saveJSON(STORAGE_KEY_PLAYERS, players);
+
+// Cloud helpers (Supabase)
+const normalizeCode = (s) => String(s || "").trim().toUpperCase().replace(/\s+/g, "");
+const setCloudStatus = (text, tone="") => {
+  if (!els.cloudStatus) return;
+  els.cloudStatus.textContent = text;
+  els.cloudStatus.classList.remove("ok","warn","bad");
+  if (tone) els.cloudStatus.classList.add(tone);
+};
+
+const getOrCreateGroup = async (code) => {
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const clean = normalizeCode(code);
+  if (!clean) throw new Error("Group code is required.");
+  const { data: found, error: fErr } = await supabase
+    .from("groups")
+    .select("*")
+    .eq("code", clean)
+    .maybeSingle();
+  if (fErr) throw fErr;
+  if (found) return found;
+
+  const { data: created, error: cErr } = await supabase
+    .from("groups")
+    .insert({ code: clean })
+    .select("*")
+    .single();
+  if (cErr) throw cErr;
+  return created;
+};
+
+const loadPlayersCloud = async (groupId) => {
+  const { data, error } = await supabase
+    .from("players")
+    .select("*")
+    .eq("group_id", groupId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map(x => ({
+    id: x.id,
+    name: x.name,
+    offense: clamp(Number(x.offense ?? 6), 1, 10),
+    defense: clamp(Number(x.defense ?? 6), 1, 10),
+    rebounding: clamp(Number(x.rebounding ?? 6), 1, 10),
+    hustle: (x.hustle === null || x.hustle === undefined) ? null : clamp(Number(x.hustle), 1, 10),
+    pos: x.position || "",
+    notes: x.notes || ""
+  }));
+};
+
+const upsertPlayerCloud = async (groupId, p) => {
+  const payload = {
+    group_id: groupId,
+    name: p.name,
+    offense: p.offense,
+    defense: p.defense,
+    rebounding: p.rebounding,
+    hustle: (p.hustle === null || p.hustle === undefined || p.hustle === "") ? null : p.hustle,
+    position: (p.pos || null),
+    notes: p.notes || null
+  };
+
+  if (p.id) {
+    const { error } = await supabase.from("players").update(payload).eq("id", p.id);
+    if (error) throw error;
+    return p.id;
+  } else {
+    const { data, error } = await supabase.from("players").insert(payload).select("id").single();
+    if (error) throw error;
+    return data.id;
+  }
+};
+
+const deletePlayerCloud = async (id) => {
+  const { error } = await supabase.from("players").delete().eq("id", id);
+  if (error) throw error;
+};
+
+let cloudSub = null;
+const subscribePlayersCloud = (groupId, onChange) => {
+  if (!supabase) return null;
+  try { if (cloudSub) supabase.removeChannel(cloudSub); } catch {}
+  cloudSub = supabase
+    .channel("players-" + groupId)
+    .on("postgres_changes",
+      { event: "*", schema: "public", table: "players", filter: `group_id=eq.${groupId}` },
+      () => onChange()
+    )
+    .subscribe();
+  return cloudSub;
+};
+
+// Storage mode
+const isCloud = () => !!(state.groupId && supabase);
+
+const storageLoadPlayers = async () => {
+  if (state.groupId && supabase) return await loadPlayersCloud(state.groupId);
+  return loadPlayersLocal();
+};
+
+const storageUpsertPlayer = async (p) => {
+  if (state.groupId && supabase) {
+    const id = await upsertPlayerCloud(state.groupId, p);
+    return id;
+  }
+  // local
+  return (p.id || uid());
+};
+
+const storageDeletePlayer = async (id) => {
+  if (state.groupId && supabase) return await deletePlayerCloud(id);
+  return;
+};
+
+// state
+  let state = {
+    players: [],
+    groupId: null,
+    groupCode: "",
+    selected: new Set(),
+    locks: {},        // playerId -> teamIndex
+    editId: null,
+    lastResult: null, // {teams, objective, needed, rosterIds, deltas, ...}
+
+};
+
+// Init players from local or cloud (if previously joined)
+state.groupId = cloudCfg.groupId || null;
+state.groupCode = cloudCfg.groupCode || "";
+if (els.groupCode) els.groupCode.value = state.groupCode;
+
+if (!supabaseConfigured) {
+  setCloudStatus("Local only", "");
+} else {
+  setCloudStatus(state.groupId ? `Cloud: ${state.groupCode}` : "Cloud ready", "ok");
+}
+
+state.players = await storageLoadPlayers();
+
+// Subscribe to cloud changes
+if (state.groupId && supabase) {
+  subscribePlayersCloud(state.groupId, async () => {
+    state.players = await storageLoadPlayers();
+    // keep current selection where possible
+    const existing = new Set(state.players.map(p=>p.id));
+    state.selected = new Set(Array.from(state.selected).filter(id => existing.has(id)));
+    if (state.selected.size === 0) state.players.forEach(p=>state.selected.add(p.id));
+    renderPlayers();
+    renderResults();
+  });
+}
+
+// Seed sample data (local mode only)
+  if (!state.groupId && state.players.length === 0) {
+    state.players = [
+      { id: uid(), name: "Aman", offense: 7, defense: 6, rebounding: 6, hustle: 6, pos:"G", notes: "Quick guard" },
+      { id: uid(), name: "Chris", offense: 6, defense: 8, rebounding: 6, hustle: 7, pos:"W", notes: "Lockdown D" },
+      { id: uid(), name: "Dev", offense: 8, defense: 5, rebounding: 6, hustle: 6, pos:"G", notes: "Shot creator" },
+      { id: uid(), name: "Eli", offense: 5, defense: 7, rebounding: 7, hustle: 7, pos:"W", notes: "Glue guy" },
+      { id: uid(), name: "Farhan", offense: 6, defense: 6, rebounding: 8, hustle: 7, pos:"G", notes: "Primary ball handler" },
+    ];
+    savePlayersLocal(state.players);
+  }
+
+  // Restore selection from session if possible; otherwise select all
+  const restoreSelection = () => {
+    if (Array.isArray(session.selectedIds) && session.selectedIds.length) {
+      const ids = new Set(state.players.map(p => p.id));
+      const keep = session.selectedIds.filter(id => ids.has(id));
+      if (keep.length) {
+        state.selected = new Set(keep);
+        return;
+      }
+    }
+    state.selected = new Set(state.players.map(p => p.id));
+  };
+  restoreSelection();
+
+  const persistSelection = () => {
+    session.selectedIds = Array.from(state.selected);
+    saveJSON(STORAGE_KEY_SESSION, session);
+  };
+
+  const totalNeeded = () => Number(els.gameSize.value) * Number(els.numTeams.value);
+
+  const overall = (p) => {
+    const w = settings.weights; // already normalized to 100
+    const base = (p.offense*(w.offense/100))
+               + (p.defense*(w.defense/100))
+               + (p.rebounding*(w.rebounding/100));
+    const hus = (settings.advanced && (p.hustle !== undefined))
+      ? (p.hustle*(w.hustle/100))
+      : 0;
+    return base + hus;
+  };
+
+  const teamTotals = (team) => {
+    const t = { offense:0, defense:0, rebounding:0, hustle:0, overall:0, g:0, w:0, b:0 };
+    for (const p of team) {
+      t.offense += p.offense;
+      t.defense += p.defense;
+      t.rebounding += p.rebounding;
+      t.hustle += (p.hustle ?? 0);
+      t.overall += overall(p);
+      if (p.pos === "G") t.g += 1;
+      if (p.pos === "W") t.w += 1;
+      if (p.pos === "B") t.b += 1;
+    }
+    return t;
+  };
+
+  const spread = (arr) => Math.max(...arr) - Math.min(...arr);
+
+  const objective = (teams) => {
+    const totals = teams.map(teamTotals);
+
+    // primary fairness drivers
+    let score = (spread(totals.map(t=>t.overall))*2.2)
+              + (spread(totals.map(t=>t.offense))*0.9)
+              + (spread(totals.map(t=>t.defense))*0.9)
+              + (spread(totals.map(t=>t.rebounding))*0.8);
+
+    if (settings.advanced && settings.weights.hustle > 0) {
+      score += spread(totals.map(t=>t.hustle))*0.4;
+    }
+
+    // light role/size proxy (avoid "all bigs" / "all guards")
+    score += spread(totals.map(t=>t.b))*0.9;
+    score += spread(totals.map(t=>t.g))*0.6;
+
+    // stability penalty (prefer minimal changes across regenerate)
+    if (settings.stability && state.lastResult && state.lastResult.teams) {
+      const prevMap = new Map();
+      state.lastResult.teams.forEach((team, ti) => team.forEach(p => prevMap.set(p.id, ti)));
+      let moved = 0;
+      teams.forEach((team, ti) => team.forEach(p => { if (prevMap.has(p.id) && prevMap.get(p.id) !== ti) moved++; }));
+      score += moved * 0.22;
+    }
+
+    return score;
+  };
+
+  const fairnessLabel = (obj) => {
+    if (obj <= 2.5) return { text: "Excellent", cls: "ok" };
+    if (obj <= 5.5) return { text: "Good", cls: "ok" };
+    if (obj <= 9) return { text: "Okay", cls: "warn" };
+    return { text: "Imbalanced", cls: "bad" };
+  };
+
+  const computeDeltas = (teams) => {
+    const totals = teams.map(teamTotals);
+    const delta = (arr) => Math.max(...arr) - Math.min(...arr);
+    return {
+      overall: delta(totals.map(t=>t.overall)),
+      offense: delta(totals.map(t=>t.offense)),
+      defense: delta(totals.map(t=>t.defense)),
+      rebounding: delta(totals.map(t=>t.rebounding)),
+      bigs: delta(totals.map(t=>t.b)),
+      guards: delta(totals.map(t=>t.g)),
+    };
+  };
+
+  const refreshNeedCounts = () => {
+    els.needCount.textContent = String(totalNeeded());
+    els.selCount.textContent = String(Array.from(state.selected).length);
+    persistSelection();
+  };
+
+  const renderWeightsUI = () => {
+    const w = settings.weights;
+    // sliders work in integer % for UX; keep normalized behind the scenes
+    els.wOff.value = String(Math.round(w.offense));
+    els.wDef.value = String(Math.round(w.defense));
+    els.wReb.value = String(Math.round(w.rebounding));
+    els.wHus.value = String(Math.round(w.hustle));
+
+    els.wOffTxt.textContent = `${Math.round(w.offense)}%`;
+    els.wDefTxt.textContent = `${Math.round(w.defense)}%`;
+    els.wRebTxt.textContent = `${Math.round(w.rebounding)}%`;
+    els.wHusTxt.textContent = `${Math.round(w.hustle)}%`;
+
+    const wt = `Off ${Math.round(w.offense)}% / Def ${Math.round(w.defense)}% / Reb ${Math.round(w.rebounding)}%` + (settings.advanced && Math.round(w.hustle)>0 ? ` / Hus ${Math.round(w.hustle)}%` : "");
+    els.weightsText.textContent = wt;
+
+    els.hustleWeightBox.style.display = settings.advanced ? "block" : "none";
+  };
+
+  const setAdvancedUI = () => {
+    els.advancedBox.style.display = settings.advanced ? "block" : "none";
+    els.advancedToggle.textContent = `Advanced: ${settings.advanced ? "On" : "Off"}`;
+    els.hustleWeightBox.style.display = settings.advanced ? "block" : "none";
+    renderWeightsUI();
+  };
+
+  const setCaptainUI = () => {
+    els.captainToggle.textContent = `Captain Mode: ${settings.captain ? "On" : "Off"}`;
+  };
+  const setStabilityUI = () => {
+    els.stabilityToggle.textContent = `Stability: ${settings.stability ? "On" : "Off"}`;
+  };
+
+  const saveSettings = () => saveJSON(STORAGE_KEY_SETTINGS, settings);
+
+  const clearDraft = () => {
+    state.editId = null;
+    els.pName.value = "";
+    els.pNotes.value = "";
+    els.pPreset.value = "";
+    els.pPos.value = "";
+    draft = { offense: 6, defense: 6, rebounding: 6, hustle: 6 };
+    renderDraftButtons();
+    els.saveBtn.textContent = "Add Player";
+    els.cancelBtn.style.display = "none";
+  };
+
+  const renderPlayers = () => {
+    refreshNeedCounts();
+    const numTeams = Number(els.numTeams.value);
+
+    els.playerList.innerHTML = "";
+    const frag = document.createDocumentFragment();
+
+    state.players.forEach(p => {
+      const item = document.createElement("div");
+      item.className = "item";
+
+      const left = document.createElement("div");
+      left.className = "inline";
+      left.style.alignItems = "flex-start";
+      left.style.paddingTop = "2px";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = state.selected.has(p.id);
+      cb.addEventListener("change", () => {
+        if (cb.checked) state.selected.add(p.id);
+        else state.selected.delete(p.id);
+        refreshNeedCounts();
+      });
+
+      left.appendChild(cb);
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+
+      const nm = document.createElement("div");
+      nm.className = "name";
+      nm.textContent = p.name;
+
+      const mi = document.createElement("div");
+      mi.className = "mini";
+      const extra = (settings.advanced && p.hustle !== undefined) ? ` • Hus ${p.hustle}` : "";
+      const pos = p.pos ? ` • ${p.pos}` : "";
+      mi.textContent = `Overall: ${overall(p).toFixed(1)} • Off ${p.offense} • Def ${p.defense} • Reb ${p.rebounding}${extra}${pos}`;
+
+      const tags = document.createElement("div");
+      tags.className = "tags";
+      if (p.notes) {
+        const t = document.createElement("span"); t.className = "tag"; t.textContent = p.notes; tags.appendChild(t);
+      }
+      if (p.pos) {
+        const t = document.createElement("span"); t.className = "tag"; t.textContent = (p.pos==="G"?"Guard":p.pos==="W"?"Wing":"Big"); tags.appendChild(t);
+      }
+      if (state.locks[p.id] !== undefined) {
+        const t = document.createElement("span"); t.className = "tag"; t.textContent = `Locked: Team ${state.locks[p.id]+1}`; tags.appendChild(t);
+      }
+
+      const controls = document.createElement("div");
+      controls.className = "row";
+      controls.style.marginTop = "8px";
+
+      const lockWrap = document.createElement("div");
+      const lockLabel = document.createElement("label");
+      lockLabel.textContent = "Lock to team (optional)";
+      const lockSel = document.createElement("select");
+      lockSel.innerHTML = `<option value="">No lock</option>` +
+        Array.from({length:numTeams}, (_,i)=>`<option value="${i}">Team ${i+1}</option>`).join("");
+      lockSel.value = (state.locks[p.id] === undefined) ? "" : String(state.locks[p.id]);
+      lockSel.addEventListener("change", () => {
+        if (lockSel.value === "") delete state.locks[p.id];
+        else state.locks[p.id] = Number(lockSel.value);
+        renderPlayers();
+      });
+      lockWrap.appendChild(lockLabel);
+      lockWrap.appendChild(lockSel);
+
+      const btnWrap = document.createElement("div");
+      btnWrap.className = "inline";
+      btnWrap.style.justifyContent = "end";
+      btnWrap.style.gap = "8px";
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "small ghost";
+      editBtn.textContent = "Edit";
+      editBtn.addEventListener("click", () => {
+        state.editId = p.id;
+        els.pName.value = p.name;
+        els.pNotes.value = p.notes || "";
+        els.pPos.value = p.pos || "";
+        draft.offense = p.offense;
+        draft.defense = p.defense;
+        draft.rebounding = p.rebounding;
+        draft.hustle = p.hustle ?? 6;
+        renderDraftButtons();
+        els.pPreset.value = "";
+        els.saveBtn.textContent = "Save Changes";
+        els.cancelBtn.style.display = "inline-block";
+        setError("");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "small danger";
+      delBtn.textContent = "Delete";
+      delBtn.addEventListener("click", async () => {
+        state.players = state.players.filter(x => x.id !== p.id);
+        state.selected.delete(p.id);
+        delete state.locks[p.id];
+if (state.groupId && supabase) {
+  try {
+    await storageDeletePlayer(p.id);
+    state.players = await storageLoadPlayers();
+  } catch (e) {
+    setError("Delete failed. Check cloud configuration or try again.");
+    return;
+  }
+} else {
+  savePlayersLocal(state.players);
+}
+        state.lastResult = null;
+        renderPlayers();
+        renderResults();
+      });
+
+      btnWrap.appendChild(editBtn);
+      btnWrap.appendChild(delBtn);
+
+      controls.appendChild(lockWrap);
+      controls.appendChild(btnWrap);
+
+      meta.appendChild(nm);
+      meta.appendChild(mi);
+      meta.appendChild(tags);
+      meta.appendChild(controls);
+
+      item.appendChild(left);
+      item.appendChild(meta);
+
+      frag.appendChild(item);
+    });
+
+    els.playerList.appendChild(frag);
+  };
+
+  const generateTeams = (iterations = 9000) => {
+    setError("");
+    const teamSize = Number(els.gameSize.value);
+    const numTeams = Number(els.numTeams.value);
+    const needed = teamSize * numTeams;
+
+    const selectedPlayers = state.players.filter(p => state.selected.has(p.id));
+    if (selectedPlayers.length < needed) {
+      setError(`Not enough selected players. Need ${needed}, but you selected ${selectedPlayers.length}.`);
+      return null;
+    }
+
+    // take top N by overall
+    const roster = selectedPlayers.slice().sort((a,b)=>overall(b)-overall(a)).slice(0, needed);
+
+    // validate locks
+    const counts = Array(numTeams).fill(0);
+    for (const p of roster) {
+      const li = state.locks[p.id];
+      if (li !== undefined) {
+        counts[li] += 1;
+        if (counts[li] > teamSize) {
+          setError("Locks make at least one team exceed the required team size. Remove some locks and try again.");
+          return null;
+        }
+      }
+    }
+
+    const locked = [];
+    const unlocked = [];
+    for (const p of roster) (state.locks[p.id] !== undefined ? locked : unlocked).push(p);
+
+    const base = unlocked.slice().sort((a,b)=>overall(b)-overall(a));
+    let bestTeams = null;
+    let bestObj = Infinity;
+
+    const build = (perm) => {
+      const teams = Array.from({length:numTeams}, ()=>[]);
+      for (const p of locked) teams[state.locks[p.id]].push(p);
+
+      let t = 0;
+      for (const p of perm) {
+        let safety = 0;
+        while (teams[t].length >= teamSize && safety < numTeams) { t = (t+1)%numTeams; safety++; }
+        if (teams[t].length < teamSize) teams[t].push(p);
+        t = (t+1)%numTeams;
+      }
+      return teams;
+    };
+
+    for (let i=0;i<iterations;i++){
+      let perm;
+      if (i % 35 === 0) {
+        perm = base.slice().sort(()=>Math.random()-0.5);
+      } else {
+        perm = base.slice();
+        const chunk = 4;
+        for (let c=0;c<perm.length;c+=chunk){
+          const end = Math.min(c+chunk, perm.length);
+          const part = perm.slice(c,end).sort(()=>Math.random()-0.5);
+          perm.splice(c, end-c, ...part);
+        }
+      }
+
+      // stability: slight bias to keep prior grouping by nudging permutation toward previous team buckets
+      if (settings.stability && state.lastResult && state.lastResult.teams && i % 7 === 0) {
+        const prevMap = new Map();
+        state.lastResult.teams.forEach((team, ti) => team.forEach(p => prevMap.set(p.id, ti)));
+        perm = perm.slice().sort((a,b) => (prevMap.get(a.id) ?? 99) - (prevMap.get(b.id) ?? 99));
+        // small random noise
+        perm = perm.map(x=>({x, r:Math.random()})).sort((a,b)=> (a.r-b.r)*0.15 + 0.85*( (prevMap.get(a.x.id)??99)-(prevMap.get(b.x.id)??99) )).map(o=>o.x);
+      }
+
+      const teams = build(perm);
+      const obj = objective(teams);
+      if (obj < bestObj) { bestObj = obj; bestTeams = teams; }
+    }
+
+    const deltas = computeDeltas(bestTeams);
+    return { teams: bestTeams, objective: bestObj, needed, rosterIds: roster.map(p=>p.id), deltas };
+  };
+
+  const teamsToText = (res) => {
+    if (!res || !res.teams) return "";
+    const lines = [];
+    res.teams.forEach((team, i) => {
+      lines.push(`Team ${i+1}:`);
+      team.forEach(p => lines.push(`- ${p.name}${p.notes ? " ("+p.notes+")" : ""}`));
+      lines.push("");
+    });
+    const d = res.deltas || computeDeltas(res.teams);
+    lines.push(`Deltas: Overall ${d.overall.toFixed(1)} | Off ${d.offense.toFixed(0)} | Def ${d.defense.toFixed(0)} | Reb ${d.rebounding.toFixed(0)} | Bigs ${d.bigs.toFixed(0)} | Guards ${d.guards.toFixed(0)}`);
+    return lines.join("\n");
+  };
+
+  const renderResults = () => {
+    els.results.innerHTML = "";
+    const res = state.lastResult;
+    if (!res) {
+      const div = document.createElement("div");
+      div.className = "note";
+      div.innerHTML = `Select players who showed up, choose format (3v3 / 4v4 / 5v5), then click <strong>Generate Teams</strong>.
+        <div style="margin-top:10px">Tip: Use <strong>Lock to team</strong> for special cases. Turn on <strong>Captain Mode</strong> to drag players between teams.</div>`;
+      els.results.appendChild(div);
+      return;
+    }
+
+    const label = fairnessLabel(res.objective);
+
+    const kpiRow = document.createElement("div");
+    kpiRow.className = "kpiRow";
+
+    const k1 = document.createElement("div");
+    k1.className = "kpi";
+    k1.innerHTML = `<div class="k">Fairness</div><div class="v ${label.cls}">${label.text}</div>
+                    <div class="note" style="margin-top:6px">Lower is better. Uses your current weights and category spreads.</div>`;
+
+    const k2 = document.createElement("div");
+    k2.className = "kpi";
+    k2.innerHTML = `<div class="k">Players used</div><div class="v">${res.needed}</div>
+                    <div class="note" style="margin-top:6px">Uses top ${res.needed} selected players to fit the format.</div>`;
+
+    const k3 = document.createElement("div");
+    k3.className = "kpi";
+    const d = res.deltas || computeDeltas(res.teams);
+    k3.innerHTML = `<div class="k">Team deltas</div>
+                    <div class="v">${d.overall.toFixed(1)}</div>
+                    <div class="note" style="margin-top:6px">Overall Δ. Off Δ ${d.offense.toFixed(0)} • Def Δ ${d.defense.toFixed(0)} • Reb Δ ${d.rebounding.toFixed(0)} • Bigs Δ ${d.bigs.toFixed(0)} • Guards Δ ${d.guards.toFixed(0)}</div>`;
+
+    kpiRow.appendChild(k1); kpiRow.appendChild(k2); kpiRow.appendChild(k3);
+    els.results.appendChild(kpiRow);
+
+    const div = document.createElement("div");
+    div.className = "divider";
+    els.results.appendChild(div);
+
+    if (settings.captain) {
+      const hint = document.createElement("div");
+      hint.className = "note dragHint";
+      hint.textContent = "Captain Mode is ON: drag a player name and drop onto another team to move them. Fairness updates instantly.";
+      els.results.appendChild(hint);
+      const dd = document.createElement("div"); dd.className="divider"; els.results.appendChild(dd);
+    }
+
+    const teamGrid = document.createElement("div");
+    teamGrid.className = "teamGrid";
+
+    // Drag and drop handlers
+    let dragPayload = null;
+
+    const onDragStart = (e, fromTeamIdx, playerId) => {
+      dragPayload = { fromTeamIdx, playerId };
+      try { e.dataTransfer.setData("text/plain", playerId); } catch {}
+      e.dataTransfer.effectAllowed = "move";
+    };
+    const onDragOver = (e) => {
+      if (!settings.captain) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+    };
+    const onDropTeam = (e, toTeamIdx) => {
+      if (!settings.captain) return;
+      e.preventDefault();
+      if (!dragPayload) return;
+      const { fromTeamIdx, playerId } = dragPayload;
+      if (fromTeamIdx === toTeamIdx) return;
+
+      const fromTeam = res.teams[fromTeamIdx];
+      const toTeam = res.teams[toTeamIdx];
+
+      const pIdx = fromTeam.findIndex(p => p.id === playerId);
+      if (pIdx < 0) return;
+
+      const [p] = fromTeam.splice(pIdx, 1);
+
+      // maintain team sizes: move someone back if needed
+      if (toTeam.length >= fromTeam.length + 2) {
+        // not expected; keep safe
+      }
+      toTeam.push(p);
+
+      // If team sizes now unequal, swap last player back to preserve exact format
+      const teamSize = Number(els.gameSize.value);
+      if (toTeam.length > teamSize) {
+        const swapped = toTeam.splice(toTeam.length-1,1)[0];
+        fromTeam.push(swapped);
+      }
+      if (fromTeam.length > teamSize) {
+        const swapped = fromTeam.splice(fromTeam.length-1,1)[0];
+        toTeam.push(swapped);
+      }
+
+      res.objective = objective(res.teams);
+      res.deltas = computeDeltas(res.teams);
+      state.lastResult = res;
+      renderResults();
+    };
+
+    res.teams.forEach((team, idx) => {
+      const totals = teamTotals(team);
+
+      const card = document.createElement("div");
+      card.className = "teamCard";
+      card.addEventListener("dragover", onDragOver);
+      card.addEventListener("drop", (e)=>onDropTeam(e, idx));
+
+      const head = document.createElement("div");
+      head.className = "teamHeader";
+      const extra = (settings.advanced && settings.weights.hustle>0) ? ` • Hus ${totals.hustle}` : "";
+      head.innerHTML = `<div class="teamTitle">Team ${idx+1}</div>
+                        <div class="score">Overall: ${totals.overall.toFixed(1)} • Off ${totals.offense} • Def ${totals.defense} • Reb ${totals.rebounding}${extra} • Bigs ${totals.b} • Guards ${totals.g}</div>`;
+
+      card.appendChild(head);
+
+      const list = document.createElement("div");
+      list.style.marginTop = "8px";
+
+      team.forEach(p => {
+        const row = document.createElement("div");
+        row.className = "playerRow";
+        if (settings.captain) {
+          row.draggable = true;
+          row.addEventListener("dragstart", (e)=>onDragStart(e, idx, p.id));
+        }
+        const pos = p.pos ? ` • ${p.pos}` : "";
+        const hus = (settings.advanced && p.hustle !== undefined && settings.weights.hustle>0) ? ` • H ${p.hustle}` : "";
+        row.innerHTML = `<div><div class="name">${p.name}</div><div class="mini">${(p.notes || "")}${p.pos ? " • " + (p.pos==="G"?"Guard":p.pos==="W"?"Wing":"Big") : ""}</div></div>
+                         <div class="right">O ${p.offense} / D ${p.defense} / R ${p.rebounding}${hus}</div>`;
+        list.appendChild(row);
+      });
+
+      card.appendChild(list);
+      teamGrid.appendChild(card);
+    });
+
+    els.results.appendChild(teamGrid);
+  };
+
+  // Weight preset logic
+  const applyWeightPreset = (preset) => {
+    const P = {
+      default:   { offense: 40, defense: 40, rebounding: 20, hustle: settings.weights.hustle || 0 },
+      defense:   { offense: 30, defense: 55, rebounding: 15, hustle: settings.weights.hustle || 0 },
+      offense:   { offense: 55, defense: 30, rebounding: 15, hustle: settings.weights.hustle || 0 },
+      rebounding:{ offense: 30, defense: 30, rebounding: 40, hustle: settings.weights.hustle || 0 },
+      balanced:  { offense: 33, defense: 33, rebounding: 34, hustle: settings.weights.hustle || 0 },
+    };
+    if (!P[preset]) return;
+    settings.weights = normalizeWeights(P[preset]);
+    settings.weightPreset = preset;
+    els.weightPreset.value = preset === "custom" ? "custom" : preset;
+    saveSettings();
+    renderWeightsUI();
+    state.lastResult = null;
+    renderResults();
+    renderPlayers();
+  };
+
+  const updateWeightsFromSliders = () => {
+    els.weightPreset.value = "custom";
+    settings.weightPreset = "custom";
+
+    settings.weights = normalizeWeights({
+      offense: Number(els.wOff.value),
+      defense: Number(els.wDef.value),
+      rebounding: Number(els.wReb.value),
+      hustle: Number(els.wHus.value),
+    });
+
+    saveSettings();
+    renderWeightsUI();
+    state.lastResult = null;
+    renderResults();
+    renderPlayers();
+  };
+
+  // Events
+  els.pPreset.addEventListener("change", () => applyPreset(els.pPreset.value));
+
+  els.advancedToggle.addEventListener("click", () => {
+    settings.advanced = !settings.advanced;
+    // default hustle weight to 0 when turning off
+    if (!settings.advanced) settings.weights = normalizeWeights({ ...settings.weights, hustle: 0 });
+    saveSettings();
+    setAdvancedUI();
+    renderPlayers();
+    state.lastResult = null;
+    renderResults();
+  });
+
+  els.captainToggle.addEventListener("click", () => {
+    settings.captain = !settings.captain;
+    saveSettings();
+    setCaptainUI();
+    renderResults();
+  });
+
+  els.stabilityToggle.addEventListener("click", () => {
+    settings.stability = !settings.stability;
+    saveSettings();
+    setStabilityUI();
+  });
+
+  els.weightPreset.addEventListener("change", () => {
+    const v = els.weightPreset.value;
+    if (v === "custom") return;
+    applyWeightPreset(v);
+  });
+
+  els.wOff.addEventListener("input", updateWeightsFromSliders);
+  els.wDef.addEventListener("input", updateWeightsFromSliders);
+  els.wReb.addEventListener("input", updateWeightsFromSliders);
+  els.wHus.addEventListener("input", updateWeightsFromSliders);
+
+  els.gameSize.addEventListener("change", () => { refreshNeedCounts(); state.lastResult = null; renderResults(); });
+  els.numTeams.addEventListener("change", () => { refreshNeedCounts(); renderPlayers(); state.lastResult = null; renderResults(); });
+
+  els.saveBtn.addEventListener("click", async () => {
+  setError("");
+  const name = els.pName.value.trim();
+  if (!name) { setError("Player name is required."); return; }
+
+  const p = {
+    id: state.editId || null,
+    name,
+    offense: clamp(Number(draft.offense || 6), 1, 10),
+    defense: clamp(Number(draft.defense || 6), 1, 10),
+    rebounding: clamp(Number(draft.rebounding || 6), 1, 10),
+    hustle: settings.advanced ? clamp(Number(draft.hustle || 6), 1, 10) : null,
+    pos: settings.advanced ? (els.pPos.value || "") : (els.pPos.value || ""),
+    notes: els.pNotes.value.trim()
+  };
+
+  try {
+    if (state.groupId && supabase) {
+      const newId = await storageUpsertPlayer(p);
+      // reload from cloud so everyone stays consistent
+      state.players = await storageLoadPlayers();
+      // ensure selection includes new player if it was an add
+      if (!state.editId && newId) state.selected.add(newId);
+    } else {
+      // local
+      const id = p.id || uid();
+      const localP = {
+        id,
+        name: p.name,
+        offense: p.offense,
+        defense: p.defense,
+        rebounding: p.rebounding,
+        hustle: settings.advanced ? p.hustle : undefined,
+        pos: p.pos || "",
+        notes: p.notes
+      };
+
+      if (state.editId) {
+        state.players = state.players.map(x => x.id === state.editId ? { ...x, ...localP } : x);
+      } else {
+        state.players = [localP, ...state.players];
+        state.selected.add(id);
+      }
+      savePlayersLocal(state.players);
+    }
+  } catch (e) {
+    setError("Save failed. Check cloud configuration or try again.");
+    return;
+  }
+
+  clearDraft();
+  state.lastResult = null;
+  renderPlayers();
+  renderResults();
+});
+
+  els.cancelBtn.addEventListener("click", () => { clearDraft(); setError(""); });
+
+els.joinGroupBtn && els.joinGroupBtn.addEventListener("click", async () => {
+  setError("");
+  if (!supabaseConfigured || !supabase) {
+    setError("Cloud sync is not enabled yet. Paste SUPABASE_URL and SUPABASE_ANON_KEY in the script (Phase 4), then reload.");
+    return;
+  }
+  try {
+    const code = els.groupCode.value;
+    const group = await getOrCreateGroup(code);
+    state.groupId = group.id;
+    state.groupCode = group.code;
+    saveJSON(STORAGE_KEY_CLOUD, { groupCode: state.groupCode, groupId: state.groupId });
+    setCloudStatus(`Cloud: ${state.groupCode}`, "ok");
+
+    state.players = await storageLoadPlayers();
+    state.selected = new Set(state.players.map(p=>p.id));
+    state.locks = {};
+    state.lastResult = null;
+    renderPlayers();
+    renderResults();
+
+    subscribePlayersCloud(state.groupId, async () => {
+      state.players = await storageLoadPlayers();
+      const existing = new Set(state.players.map(p=>p.id));
+      state.selected = new Set(Array.from(state.selected).filter(id => existing.has(id)));
+      if (state.selected.size === 0) state.players.forEach(p=>state.selected.add(p.id));
+      renderPlayers();
+      renderResults();
+    });
+  } catch (e) {
+    setError("Could not join/create group. Verify your Supabase tables/policies and try again.");
+  }
+});
+
+
+  els.genBtn.addEventListener("click", () => {
+    const res = generateTeams(9500);
+    if (!res) return;
+    state.lastResult = res;
+    renderResults();
+  });
+
+  els.regenBtn.addEventListener("click", () => {
+    const res = generateTeams(9500);
+    if (!res) return;
+    state.lastResult = res;
+    renderResults();
+  });
+
+  els.clearLocksBtn.addEventListener("click", () => {
+    state.locks = {};
+    renderPlayers();
+  });
+
+  els.copyBtn.addEventListener("click", async () => {
+    if (!state.lastResult) { setError("Generate teams first."); return; }
+    try {
+      await navigator.clipboard.writeText(teamsToText(state.lastResult));
+      setError("");
+    } catch {
+      setError("Copy failed on this browser. Try using Share instead.");
+    }
+  });
+
+  els.shareBtn.addEventListener("click", async () => {
+    if (!state.lastResult) { setError("Generate teams first."); return; }
+    const text = teamsToText(state.lastResult);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Pickup Teams", text });
+        setError("");
+      } else {
+        await navigator.clipboard.writeText(text);
+        setError("Sharing not supported here; copied to clipboard instead.");
+      }
+    } catch {
+      // no-op: user may cancel share
+    }
+  });
+
+  els.exportBtn.addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(state.players, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "pickup-team-balancer-players.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  els.importBtn.addEventListener("click", () => els.importFile.click());
+  els.importFile.addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const parsed = JSON.parse(String(reader.result || ""));
+        if (!Array.isArray(parsed)) throw new Error();
+
+        state.players = parsed.map(x => ({
+          id: x.id || uid(),
+          name: String(x.name || "").trim() || "Unnamed",
+          offense: clamp(Number(x.offense || 6), 1, 10),
+          defense: clamp(Number(x.defense || 6), 1, 10),
+          rebounding: clamp(Number(x.rebounding ?? x.playmaking ?? 6), 1, 10), // backwards compatible
+          hustle: (x.hustle === undefined ? undefined : clamp(Number(x.hustle || 6), 1, 10)),
+          pos: String(x.pos || ""),
+          notes: String(x.notes || "")
+        }));
+
+        savePlayersLocal(state.players);
+        state.selected = new Set(state.players.map(p=>p.id));
+        state.locks = {};
+        state.lastResult = null;
+        setError("");
+        renderPlayers();
+        renderResults();
+      } catch {
+        setError("Import failed. Use a JSON export created by this app.");
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Initial UI setup
+  els.weightPreset.value = settings.weightPreset || "default";
+  setAdvancedUI();
+  setCaptainUI();
+  setStabilityUI();
+  renderWeightsUI();
+  renderPlayers();
+  refreshNeedCounts();
+  renderResults();
+})();
+</script>
+</body>
+</html>
