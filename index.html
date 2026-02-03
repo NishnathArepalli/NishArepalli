@@ -5,82 +5,452 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Pickup Team Balancer</title>
   <style>
-    :root { --bg:#0b1020; --card:#121a33; --muted:#9fb0ff; --text:#e9eeff; --line:#24305a; --ok:#21c55d; --warn:#f59e0b; --bad:#ef4444; }
+
+    :root{
+      --bg1:#070a14;
+      --bg2:#0b1020;
+      --card:rgba(18,26,51,.90);
+      --card2:rgba(12,18,38,.85);
+      --text:#e9eeff;
+      --sub:rgba(233,238,255,.72);
+      --muted:#9fb0ff;
+      --line:rgba(36,48,90,.65);
+      --line2:rgba(36,48,90,.9);
+      --shadow:0 14px 40px rgba(0,0,0,.35);
+      --radius:16px;
+      --radius2:12px;
+      --ok:#21c55d; --warn:#f59e0b; --bad:#ef4444;
+      --brand1:#3b82f6; --brand2:#6366f1;
+      --focus:rgba(99,102,241,.45);
+    }
+
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:linear-gradient(120deg,#070b16,#0b1020);color:var(--text)}
-    .wrap{max-width:1100px;margin:0 auto;padding:16px}
-    .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
-    .title{font-weight:800;font-size:20px}
-    .sub{color:rgba(233,238,255,.75);font-size:13px;margin-top:4px}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 15% 10%, rgba(99,102,241,.20), transparent 60%),
+        radial-gradient(900px 500px at 85% 0%, rgba(59,130,246,.18), transparent 55%),
+        linear-gradient(120deg,var(--bg1),var(--bg2));
+    }
+
+    .wrap{max-width:1120px;margin:0 auto;padding:18px}
+    .top{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:12px;
+      align-items:end;
+    }
+    @media(max-width:900px){
+      .top{grid-template-columns:1fr; align-items:start}
+    }
+
+    .title{font-weight:900;font-size:22px;letter-spacing:.2px}
+    .sub{color:var(--sub);font-size:13px;margin-top:6px;line-height:1.35}
+
     .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-top:14px}
     @media(max-width:980px){.grid{grid-template-columns:1fr}}
-    .card{background:rgba(18,26,51,.92);border:1px solid rgba(36,48,90,.65);border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-    h2{margin:0 0 10px 0;font-size:16px}
-    label{display:block;font-size:12px;color:rgba(233,238,255,.75);margin-bottom:6px}
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+    h2{margin:0 0 10px 0;font-size:16px;font-weight:850}
+
+    label{display:block;font-size:12px;color:var(--sub);margin-bottom:6px}
+
     input,select,button,textarea{
-      width:100%;border-radius:10px;border:1px solid rgba(36,48,90,.9);
-      background:rgba(8,12,25,.7);color:var(--text);padding:10px;outline:none
+      width:100%;
+      border-radius:var(--radius2);
+      border:1px solid var(--line2);
+      background:rgba(8,12,25,.65);
+      color:var(--text);
+      padding:10px 11px;
+      outline:none;
+      transition: transform .02s ease, border-color .15s ease, box-shadow .15s ease, background .15s ease;
     }
     input::placeholder{color:rgba(233,238,255,.45)}
-    button{cursor:pointer;font-weight:700}
-    button.primary{background:linear-gradient(90deg,#3b82f6,#6366f1);border:none}
+    input:focus,select:focus,textarea:focus{
+      border-color:rgba(99,102,241,.75);
+      box-shadow:0 0 0 4px var(--focus);
+    }
+
+    button{cursor:pointer;font-weight:800}
+    button:active{transform: translateY(1px)}
+    button.primary{
+      border:none;
+      background:linear-gradient(90deg,var(--brand1),var(--brand2));
+      box-shadow:0 10px 24px rgba(59,130,246,.18);
+    }
+    button.primary:hover{filter:brightness(1.05)}
     button.ghost{background:transparent}
-    button.danger{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.35)}
-    button.small{padding:8px 10px;font-size:13px}
+    button.ghost:hover{background:rgba(255,255,255,.05)}
+    button.danger{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.40)}
+    button.danger:hover{background:rgba(239,68,68,.20)}
+    button.small{padding:9px 11px;font-size:13px}
+
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
     .row > *{flex:1;min-width:140px}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid rgba(36,48,90,.8);background:rgba(8,12,25,.5);font-size:12px;color:rgba(233,238,255,.85)}
-    .divider{height:1px;background:rgba(36,48,90,.65);margin:12px 0}
-    .note{font-size:12px;color:rgba(233,238,255,.72);line-height:1.35}
+
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:7px 11px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(8,12,25,.45);
+      font-size:12px;
+      color:rgba(233,238,255,.88)
+    }
+
+    .divider{height:1px;background:var(--line);margin:12px 0}
+    .note{font-size:12px;color:var(--sub);line-height:1.35}
+
     .list{display:flex;flex-direction:column;gap:8px}
-    .item{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:12px;border:1px solid rgba(36,48,90,.65);background:rgba(8,12,25,.45)}
+    .item{
+      display:flex;gap:10px;align-items:flex-start;
+      padding:11px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(8,12,25,.40)
+    }
+
     .meta{flex:1}
-    .name{font-weight:800}
-    .mini{font-size:12px;color:rgba(233,238,255,.75);margin-top:2px}
-    .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-    .tag{font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid rgba(36,48,90,.7);background:rgba(18,26,51,.55);color:rgba(233,238,255,.85)}
+    .name{font-weight:900}
+    .mini{font-size:12px;color:var(--sub);margin-top:3px}
+    .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+    .tag{
+      font-size:11px;
+      padding:4px 9px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(18,26,51,.52);
+      color:rgba(233,238,255,.88)
+    }
+
     .teamGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
     @media(max-width:700px){.teamGrid{grid-template-columns:1fr}}
-    .teamCard{border-radius:14px;border:1px solid rgba(36,48,90,.65);background:rgba(8,12,25,.45);padding:12px}
-    .teamHeader{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-    .teamTitle{font-weight:900}
-    .score{font-size:12px;color:rgba(233,238,255,.8)}
+    .teamCard{
+      border-radius:var(--radius);
+      border:1px solid var(--line);
+      background:rgba(8,12,25,.40);
+      padding:12px
+    }
+    .teamHeader{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+    .teamTitle{font-weight:950}
+    .score{font-size:12px;color:var(--sub)}
+
     .playerRow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed rgba(36,48,90,.5)}
     .playerRow:last-child{border-bottom:none}
-    .right{text-align:right;font-size:12px;color:rgba(233,238,255,.8);min-width:92px}
+    .right{text-align:right;font-size:12px;color:var(--sub);min-width:92px}
+
     .kpiRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    .kpi{flex:1;min-width:160px;border-radius:12px;border:1px solid rgba(36,48,90,.65);background:rgba(18,26,51,.55);padding:10px}
-    .k{font-size:12px;color:rgba(233,238,255,.75)}
-    .v{font-size:16px;font-weight:900;margin-top:4px}
+    .kpi{
+      flex:1;min-width:170px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(18,26,51,.52);
+      padding:11px
+    }
+    .k{font-size:12px;color:var(--sub)}
+    .v{font-size:16px;font-weight:950;margin-top:4px}
+
     .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
     .inline{display:flex;gap:8px;align-items:center}
     .inline input[type="checkbox"]{width:auto;transform:translateY(1px)}
-    .toggleRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .toggleRow .pill{cursor:pointer;user-select:none}
-    .btnGroup{display:flex;gap:6px;flex-wrap:wrap}
-    .rateBtn{
-      width:auto;flex:0 0 auto;padding:8px 10px;border-radius:10px;
-      border:1px solid rgba(36,48,90,.85);
-      background:rgba(8,12,25,.55);
-      color:rgba(233,238,255,.9);
-      font-size:13px;
-      min-width:38px;
-      text-align:center;
+
+    /* subtle alignment improvements */
+    #importFile{display:none}
+
+  
+    /* Mobile-first polish */
+    .item.tappable{cursor:pointer}
+    .stickyBar{
+      position:fixed; left:0; right:0; bottom:0; z-index:50;
+      padding:10px 12px;
+      background:linear-gradient(180deg, rgba(7,10,20,.15), rgba(7,10,20,.92) 30%, rgba(7,10,20,.98));
+      border-top:1px solid var(--line);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 -10px 30px rgba(0,0,0,.35);
+      display:none;
     }
-    .rateBtn.active{background:linear-gradient(90deg,#22c55e,#3b82f6);border:none}
-    .smallInput{padding:8px 10px;font-size:13px}
-    .sectionTitle{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-    .dragHint{opacity:.85}
-    .dropTarget{outline:2px dashed rgba(99,102,241,.75);outline-offset:4px;border-radius:10px}
-    .muted{opacity:.8}
+    .stickyBar .inner{
+      max-width:1100px; margin:0 auto;
+      display:flex; gap:10px; align-items:center;
+    }
+    .stickyMeta{
+      flex:1;
+      display:flex; flex-direction:column; gap:2px;
+      font-size:12px; color:var(--sub);
+      min-width:120px;
+    }
+    .stickyMeta strong{color:var(--text); font-size:13px}
+    .stickyBtns{display:flex; gap:10px; flex:1.2}
+    .stickyBtns button{flex:1; padding:12px 12px; font-size:14px; border-radius:12px}
+    .stickyMore{display:flex; gap:10px}
+    .stickyMore button{width:auto; padding:12px 12px; border-radius:12px}
+
+    @media (max-width:700px){
+      .wrap{padding:12px}
+      .top{gap:10px}
+      .title{font-size:20px}
+      .sub{font-size:12px}
+      .grid{gap:12px}
+      .card{padding:12px}
+      h2{font-size:15px}
+      input,select,button,textarea{padding:10px}
+      .row{gap:8px}
+      .row > *{min-width:130px}
+      .tags{gap:6px}
+      .tag{padding:4px 8px}
+      .playerRow{padding:7px 0}
+      .right{min-width:92px}
+      /* Make checkbox easier but keep row tap */
+      .inline input[type="checkbox"]{transform:scale(1.15)}
+      /* Reserve space for sticky bar */
+      body{padding-bottom:88px}
+      .stickyBar{display:block}
+      /* Keep the original button row but slightly less prominent */
+      #genBtn,#regenBtn,#clearLocksBtn{padding:10px 12px}
+    }
+
   </style>
+
+<style>
+
+    :root{
+      --bg1:#070a14;
+      --bg2:#0b1020;
+      --card:rgba(18,26,51,.90);
+      --card2:rgba(12,18,38,.85);
+      --text:#e9eeff;
+      --sub:rgba(233,238,255,.72);
+      --muted:#9fb0ff;
+      --line:rgba(36,48,90,.65);
+      --line2:rgba(36,48,90,.9);
+      --shadow:0 14px 40px rgba(0,0,0,.35);
+      --radius:16px;
+      --radius2:12px;
+      --ok:#21c55d; --warn:#f59e0b; --bad:#ef4444;
+      --brand1:#3b82f6; --brand2:#6366f1;
+      --focus:rgba(99,102,241,.45);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 15% 10%, rgba(99,102,241,.20), transparent 60%),
+        radial-gradient(900px 500px at 85% 0%, rgba(59,130,246,.18), transparent 55%),
+        linear-gradient(120deg,var(--bg1),var(--bg2));
+    }
+
+    .wrap{max-width:1120px;margin:0 auto;padding:18px}
+    .top{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:12px;
+      align-items:end;
+    }
+    @media(max-width:900px){
+      .top{grid-template-columns:1fr; align-items:start}
+    }
+
+    .title{font-weight:900;font-size:22px;letter-spacing:.2px}
+    .sub{color:var(--sub);font-size:13px;margin-top:6px;line-height:1.35}
+
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-top:14px}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+    h2{margin:0 0 10px 0;font-size:16px;font-weight:850}
+
+    label{display:block;font-size:12px;color:var(--sub);margin-bottom:6px}
+
+    input,select,button,textarea{
+      width:100%;
+      border-radius:var(--radius2);
+      border:1px solid var(--line2);
+      background:rgba(8,12,25,.65);
+      color:var(--text);
+      padding:10px 11px;
+      outline:none;
+      transition: transform .02s ease, border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    input::placeholder{color:rgba(233,238,255,.45)}
+    input:focus,select:focus,textarea:focus{
+      border-color:rgba(99,102,241,.75);
+      box-shadow:0 0 0 4px var(--focus);
+    }
+
+    button{cursor:pointer;font-weight:800}
+    button:active{transform: translateY(1px)}
+    button.primary{
+      border:none;
+      background:linear-gradient(90deg,var(--brand1),var(--brand2));
+      box-shadow:0 10px 24px rgba(59,130,246,.18);
+    }
+    button.primary:hover{filter:brightness(1.05)}
+    button.ghost{background:transparent}
+    button.ghost:hover{background:rgba(255,255,255,.05)}
+    button.danger{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.40)}
+    button.danger:hover{background:rgba(239,68,68,.20)}
+    button.small{padding:9px 11px;font-size:13px}
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+    .row > *{flex:1;min-width:140px}
+
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:7px 11px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(8,12,25,.45);
+      font-size:12px;
+      color:rgba(233,238,255,.88)
+    }
+
+    .divider{height:1px;background:var(--line);margin:12px 0}
+    .note{font-size:12px;color:var(--sub);line-height:1.35}
+
+    .list{display:flex;flex-direction:column;gap:8px}
+    .item{
+      display:flex;gap:10px;align-items:flex-start;
+      padding:11px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(8,12,25,.40)
+    }
+
+    .meta{flex:1}
+    .name{font-weight:900}
+    .mini{font-size:12px;color:var(--sub);margin-top:3px}
+    .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+    .tag{
+      font-size:11px;
+      padding:4px 9px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(18,26,51,.52);
+      color:rgba(233,238,255,.88)
+    }
+
+    .teamGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    @media(max-width:700px){.teamGrid{grid-template-columns:1fr}}
+    .teamCard{
+      border-radius:var(--radius);
+      border:1px solid var(--line);
+      background:rgba(8,12,25,.40);
+      padding:12px
+    }
+    .teamHeader{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+    .teamTitle{font-weight:950}
+    .score{font-size:12px;color:var(--sub)}
+
+    .playerRow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed rgba(36,48,90,.5)}
+    .playerRow:last-child{border-bottom:none}
+    .right{text-align:right;font-size:12px;color:var(--sub);min-width:92px}
+
+    .kpiRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .kpi{
+      flex:1;min-width:170px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(18,26,51,.52);
+      padding:11px
+    }
+    .k{font-size:12px;color:var(--sub)}
+    .v{font-size:16px;font-weight:950;margin-top:4px}
+
+    .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+    .inline{display:flex;gap:8px;align-items:center}
+    .inline input[type="checkbox"]{width:auto;transform:translateY(1px)}
+
+    /* subtle alignment improvements */
+    #importFile{display:none}
+
+  
+    /* Mobile-first polish */
+    .item.tappable{cursor:pointer}
+    .stickyBar{
+      position:fixed; left:0; right:0; bottom:0; z-index:50;
+      padding:10px 12px;
+      background:linear-gradient(180deg, rgba(7,10,20,.15), rgba(7,10,20,.92) 30%, rgba(7,10,20,.98));
+      border-top:1px solid var(--line);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 -10px 30px rgba(0,0,0,.35);
+      display:none;
+    }
+    .stickyBar .inner{
+      max-width:1100px; margin:0 auto;
+      display:flex; gap:10px; align-items:center;
+    }
+    .stickyMeta{
+      flex:1;
+      display:flex; flex-direction:column; gap:2px;
+      font-size:12px; color:var(--sub);
+      min-width:120px;
+    }
+    .stickyMeta strong{color:var(--text); font-size:13px}
+    .stickyBtns{display:flex; gap:10px; flex:1.2}
+    .stickyBtns button{flex:1; padding:12px 12px; font-size:14px; border-radius:12px}
+    .stickyMore{display:flex; gap:10px}
+    .stickyMore button{width:auto; padding:12px 12px; border-radius:12px}
+
+    @media (max-width:700px){
+      .wrap{padding:12px}
+      .top{gap:10px}
+      .title{font-size:20px}
+      .sub{font-size:12px}
+      .grid{gap:12px}
+      .card{padding:12px}
+      h2{font-size:15px}
+      input,select,button,textarea{padding:10px}
+      .row{gap:8px}
+      .row > *{min-width:130px}
+      .tags{gap:6px}
+      .tag{padding:4px 8px}
+      .playerRow{padding:7px 0}
+      .right{min-width:92px}
+      /* Make checkbox easier but keep row tap */
+      .inline input[type="checkbox"]{transform:scale(1.15)}
+      /* Reserve space for sticky bar */
+      body{padding-bottom:88px}
+      .stickyBar{display:block}
+      /* Keep the original button row but slightly less prominent */
+      #genBtn,#regenBtn,#clearLocksBtn{padding:10px 12px}
+    }
+
+  </style>
+
 </head>
 <body>
   <div class="wrap">
     <div class="top">
       <div>
         <div class="title">Pickup Team Balancer</div>
-        <div class="sub">No logins. Saves under the group.</div>
+        <div class="sub">No login. Saves locally on this device. Export/Import to move it to another phone.</div>
       </div>
       <div class="row" style="min-width:520px">
         <div style="flex:1.2;min-width:220px">
@@ -95,14 +465,12 @@
           <label style="margin-bottom:6px">Status</label>
           <div id="cloudStatus" class="pill" style="width:100%;justify-content:center">Local only</div>
         </div>
+        <button id="inviteBtn" class="small ghost" title="Copy a link that auto-joins this group">Copy Invite Link</button>
         <button id="exportBtn" class="small ghost">Export Players</button>
         <button id="importBtn" class="small ghost">Import Players</button>
         <input id="importFile" type="file" accept="application/json" style="display:none" />
       </div>
-        <button id="exportBtn" class="small ghost">Export Players</button>
-        <button id="importBtn" class="small ghost">Import Players</button>
-        <input id="importFile" type="file" accept="application/json" style="display:none" />
-      </div>
+</div>
     </div>
 
     <div id="errorBox" class="card" style="display:none;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.08);margin-top:12px">
@@ -224,6 +592,11 @@
           <button id="clearLocksBtn" class="ghost">Clear Locks</button>
         </div>
 
+<div class="row" style="margin-top:10px">
+          <button id="nextGameBtn" class="primary">Next Game</button>
+          <button id="resetRotationBtn" class="ghost">Reset Rotation</button>
+        </div>
+
         <div class="row" style="margin-top:10px">
           <button id="copyBtn" class="small ghost">Copy Teams</button>
           <button id="shareBtn" class="small ghost">Share</button>
@@ -289,8 +662,8 @@
 (async () => {
   // Optional cloud sync via Supabase.
   // To enable: paste your values from Supabase Settings → API.
-  const SUPABASE_URL = "https://qkfgnsytldnhenhfqhvr.supabase.co";        // e.g., "https://xxxx.supabase.co"
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZmduc3l0bGRuaGVuaGZxaHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTIwOTEsImV4cCI6MjA4NTAyODA5MX0.I9JcTBoZpxT9eTz8dGP_7kXeH0fqu7A_qJ5NK7HknGE";   // anon public key
+  const SUPABASE_URL = "";        // e.g., "https://xxxx.supabase.co"
+  const SUPABASE_ANON_KEY = "";   // anon public key
   const supabaseConfigured = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
   const supabase = (supabaseConfigured && window.supabase)
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -350,6 +723,12 @@
     importBtn: document.getElementById("importBtn"),
     importFile: document.getElementById("importFile"),
 
+    stickySel: document.getElementById("stickySel"),
+    stickyNeed: document.getElementById("stickyNeed"),
+    stickyGen: document.getElementById("stickyGen"),
+    stickyRegen: document.getElementById("stickyRegen"),
+    stickyClear: document.getElementById("stickyClear"),
+
     // weights
     weightPreset: document.getElementById("weightPreset"),
     wOff: document.getElementById("wOff"),
@@ -367,6 +746,9 @@
     stabilityToggle: document.getElementById("stabilityToggle"),
     copyBtn: document.getElementById("copyBtn"),
     shareBtn: document.getElementById("shareBtn"),
+    inviteBtn: document.getElementById("inviteBtn"),
+    nextGameBtn: document.getElementById("nextGameBtn"),
+    resetRotationBtn: document.getElementById("resetRotationBtn"),
   };
 
   const setError = (msg) => {
@@ -410,6 +792,13 @@
     return s || { selectedIds: null };
   })();
 
+
+  const STORAGE_KEY_ROTATION = "pickup_team_balancer_v2_rotation";
+  let rotation = (() => {
+    const r = loadJSON(STORAGE_KEY_ROTATION, { queueIds: null, lastRosterIds: null });
+    return r || { queueIds: null, lastRosterIds: null };
+  })();
+  const saveRotation = () => saveJSON(STORAGE_KEY_ROTATION, rotation);
 
 const STORAGE_KEY_CLOUD = "pickup_team_balancer_v2_cloud";
 
@@ -600,6 +989,7 @@ const storageDeletePlayer = async (id) => {
     groupId: null,
     groupCode: "",
     selected: new Set(),
+    playing: new Set(), // who is playing this game (rotation)
     locks: {},        // playerId -> teamIndex
     editId: null,
     lastResult: null, // {teams, objective, needed, rosterIds, deltas, ...}
@@ -616,6 +1006,7 @@ if (!supabaseConfigured) {
 } else {
   setCloudStatus(state.groupId ? `Cloud: ${state.groupCode}` : "Cloud ready", "ok");
 }
+
 
 state.players = await storageLoadPlayers();
 
@@ -657,6 +1048,36 @@ if (state.groupId && supabase) {
     state.selected = new Set(state.players.map(p => p.id));
   };
   restoreSelection();
+
+  const selectedIdsInPlayerOrder = () => state.players.filter(p => state.selected.has(p.id)).map(p => p.id);
+
+  const syncRotationQueue = () => {
+    // Keep queueIds only for currently selected players; append newly selected to the end.
+    const selectedOrdered = selectedIdsInPlayerOrder();
+    if (!Array.isArray(rotation.queueIds) || rotation.queueIds.length === 0) {
+      rotation.queueIds = selectedOrdered.slice();
+      saveRotation();
+      return;
+    }
+    const selectedSet = new Set(selectedOrdered);
+    rotation.queueIds = rotation.queueIds.filter(id => selectedSet.has(id));
+    const inQueue = new Set(rotation.queueIds);
+    for (const id of selectedOrdered) if (!inQueue.has(id)) rotation.queueIds.push(id);
+    saveRotation();
+  };
+
+  const computeDefaultPlaying = () => {
+    const needed = Number(els.gameSize.value) * Number(els.numTeams.value);
+    syncRotationQueue();
+    const selectedSet = new Set(selectedIdsInPlayerOrder());
+    // Ensure playing is subset of selected
+    state.playing = new Set(Array.from(state.playing).filter(id => selectedSet.has(id)));
+    if (state.playing.size !== needed) {
+      const next = rotation.queueIds.slice(0, needed);
+      state.playing = new Set(next);
+    }
+  };
+
 
   const persistSelection = () => {
     session.selectedIds = Array.from(state.selected);
@@ -818,6 +1239,22 @@ if (state.groupId && supabase) {
         if (cb.checked) state.selected.add(p.id);
         else state.selected.delete(p.id);
         refreshNeedCounts();
+        syncRotationQueue();
+        // If current playing set became invalid, recompute
+        const neededNow = totalNeeded();
+        const selSet = new Set(selectedIdsInPlayerOrder());
+        state.playing = new Set(Array.from(state.playing).filter(id => selSet.has(id)));
+        if (state.playing.size !== neededNow) computeDefaultPlaying();
+        renderPlayers();
+        renderResults();
+      });
+
+      // Tap anywhere on the row to toggle selection (mobile-friendly)
+      item.classList.add("tappable");
+      item.addEventListener("click", (e) => {
+        if (e.target && e.target.closest && e.target.closest("button, select, input, a")) return;
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event("change", { bubbles: true }));
       });
 
       left.appendChild(cb);
@@ -845,6 +1282,9 @@ if (state.groupId && supabase) {
       }
       if (state.locks[p.id] !== undefined) {
         const t = document.createElement("span"); t.className = "tag"; t.textContent = `Locked: Team ${state.locks[p.id]+1}`; tags.appendChild(t);
+      }
+      if (state.playing && state.playing.has(p.id)) {
+        const t = document.createElement("span"); t.className = "tag"; t.textContent = "Playing now"; tags.appendChild(t);
       }
 
       const controls = document.createElement("div");
@@ -942,12 +1382,19 @@ if (state.groupId && supabase) {
 
     const selectedPlayers = state.players.filter(p => state.selected.has(p.id));
     if (selectedPlayers.length < needed) {
+
       setError(`Not enough selected players. Need ${needed}, but you selected ${selectedPlayers.length}.`);
       return null;
     }
 
-    // take top N by overall
-    const roster = selectedPlayers.slice().sort((a,b)=>overall(b)-overall(a)).slice(0, needed);
+    // pick who plays this game (rotation queue); fallback to top overall if needed
+    computeDefaultPlaying();
+    let roster = state.players.filter(p => state.playing.has(p.id));
+    if (roster.length !== needed) {
+      roster = selectedPlayers.slice().sort((a,b)=>overall(b)-overall(a)).slice(0, needed);
+      state.playing = new Set(roster.map(p=>p.id));
+    }
+
 
     // validate locks
     const counts = Array(numTeams).fill(0);
@@ -1013,7 +1460,8 @@ if (state.groupId && supabase) {
     }
 
     const deltas = computeDeltas(bestTeams);
-    return { teams: bestTeams, objective: bestObj, needed, rosterIds: roster.map(p=>p.id), deltas };
+    const benchIds = selectedPlayers.map(p=>p.id).filter(id => !new Set(roster.map(p=>p.id)).has(id));
+    return { teams: bestTeams, objective: bestObj, needed, rosterIds: roster.map(p=>p.id), benchIds, deltas };
   };
 
   const teamsToText = (res) => {
@@ -1075,6 +1523,26 @@ if (state.groupId && supabase) {
       hint.className = "note dragHint";
       hint.textContent = "Captain Mode is ON: drag a player name and drop onto another team to move them. Fairness updates instantly.";
       els.results.appendChild(hint);
+      const dd = document.createElement("div"); dd.className="divider"; els.results.appendChild(dd);
+    }
+
+
+    // Bench / sitting out list (when more players are selected than needed)
+    const benchIds = Array.isArray(res.benchIds) ? res.benchIds : [];
+    if (benchIds.length) {
+      const benchCard = document.createElement("div");
+      benchCard.className = "teamCard";
+      benchCard.style.marginBottom = "12px";
+      const names = benchIds
+        .map(id => state.players.find(p=>p.id===id))
+        .filter(Boolean)
+        .map(p => p.name);
+      benchCard.innerHTML = `<div class="teamHeader">
+          <div class="teamTitle">Sitting out (${names.length})</div>
+          <div class="score">Use <strong>Next Game</strong> to rotate fairly</div>
+        </div>
+        <div class="note" style="margin-top:8px">${names.map(n=>`<span class="tag">${n}</span>`).join(" ")}</div>`;
+      els.results.appendChild(benchCard);
       const dd = document.createElement("div"); dd.className="divider"; els.results.appendChild(dd);
     }
 
@@ -1309,14 +1777,14 @@ if (state.groupId && supabase) {
 
   els.cancelBtn.addEventListener("click", () => { clearDraft(); setError(""); });
 
-els.joinGroupBtn && els.joinGroupBtn.addEventListener("click", async () => {
+
+const joinCloudGroup = async (code) => {
   setError("");
   if (!supabaseConfigured || !supabase) {
     setError("Cloud sync is not enabled yet. Paste SUPABASE_URL and SUPABASE_ANON_KEY in the script (Phase 4), then reload.");
-    return;
+    return false;
   }
   try {
-    const code = els.groupCode.value;
     const group = await getOrCreateGroup(code);
     state.groupId = group.id;
     state.groupCode = group.code;
@@ -1325,6 +1793,10 @@ els.joinGroupBtn && els.joinGroupBtn.addEventListener("click", async () => {
 
     state.players = await storageLoadPlayers();
     state.selected = new Set(state.players.map(p=>p.id));
+    state.playing = new Set();
+    syncRotationQueue();
+    computeDefaultPlaying();
+
     state.locks = {};
     state.lastResult = null;
     renderPlayers();
@@ -1335,16 +1807,50 @@ els.joinGroupBtn && els.joinGroupBtn.addEventListener("click", async () => {
       const existing = new Set(state.players.map(p=>p.id));
       state.selected = new Set(Array.from(state.selected).filter(id => existing.has(id)));
       if (state.selected.size === 0) state.players.forEach(p=>state.selected.add(p.id));
+      syncRotationQueue();
+      computeDefaultPlaying();
       renderPlayers();
       renderResults();
     });
+    return true;
   } catch (e) {
     setError("Could not join/create group. Verify your Supabase tables/policies and try again.");
+    return false;
   }
+};
+
+// Auto-join from invite link: ?group=CODE
+try {
+  const qp = new URLSearchParams(location.search);
+  const g = qp.get("group");
+  if (g && supabaseConfigured) {
+    els.groupCode.value = g;
+    await joinCloudGroup(g);
+  }
+} catch {}
+
+
+
+els.joinGroupBtn && els.joinGroupBtn.addEventListener("click", async () => {
+  await joinCloudGroup(els.groupCode.value);
 });
 
 
-  els.genBtn.addEventListener("click", () => {
+  
+  els.inviteBtn && els.inviteBtn.addEventListener("click", async () => {
+    const code = normalizeCode(els.groupCode.value || state.groupCode);
+    if (!code) { setError("Enter a group code first, then copy the invite link."); return; }
+    const url = `${location.origin}${location.pathname}?group=${encodeURIComponent(code)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCloudStatus(`Invite copied`, "ok");
+      setTimeout(()=>setCloudStatus(state.groupId ? `Cloud: ${state.groupCode}` : (supabaseConfigured ? "Cloud ready" : "Local only"), state.groupId ? "ok" : ""), 1200);
+    } catch {
+      prompt("Copy this invite link:", url);
+    }
+  });
+
+els.genBtn.addEventListener("click", () => {
     const res = generateTeams(9500);
     if (!res) return;
     state.lastResult = res;
@@ -1355,6 +1861,9 @@ els.joinGroupBtn && els.joinGroupBtn.addEventListener("click", async () => {
     const res = generateTeams(9500);
     if (!res) return;
     state.lastResult = res;
+    rotation.lastRosterIds = res.rosterIds;
+    saveRotation();
+    renderPlayers();
     renderResults();
   });
 
@@ -1362,6 +1871,59 @@ els.joinGroupBtn && els.joinGroupBtn.addEventListener("click", async () => {
     state.locks = {};
     renderPlayers();
   });
+
+
+  // Mobile sticky bar buttons mirror the main actions
+  if (els.stickyGen) els.stickyGen.addEventListener("click", () => els.genBtn.click());
+  if (els.stickyRegen) els.stickyRegen.addEventListener("click", () => els.regenBtn.click());
+  if (els.stickyClear) els.stickyClear.addEventListener("click", () => els.clearLocksBtn.click());
+
+  els.resetRotationBtn && els.resetRotationBtn.addEventListener("click", () => {
+    syncRotationQueue();
+    rotation.lastRosterIds = null;
+    saveRotation();
+    state.playing = new Set();
+    computeDefaultPlaying();
+    state.lastResult = null;
+    renderPlayers();
+    renderResults();
+  });
+
+  els.nextGameBtn && els.nextGameBtn.addEventListener("click", () => {
+    const needed = Number(els.gameSize.value) * Number(els.numTeams.value);
+    syncRotationQueue();
+
+    // If we don't have a last roster, just generate once.
+    if (!state.lastResult || !Array.isArray(state.lastResult.rosterIds)) {
+      const res = generateTeams(9500);
+      if (!res) return;
+      state.lastResult = res;
+      rotation.lastRosterIds = res.rosterIds;
+      saveRotation();
+      renderPlayers();
+      renderResults();
+      return;
+    }
+
+    const last = state.lastResult.rosterIds.slice();
+    // Move last game's players to end of queue
+    const setLast = new Set(last);
+    rotation.queueIds = rotation.queueIds.filter(id => !setLast.has(id)).concat(last);
+    saveRotation();
+
+    // Select next group to play
+    const nextIds = rotation.queueIds.slice(0, needed);
+    state.playing = new Set(nextIds);
+
+    const res = generateTeams(9500);
+    if (!res) return;
+    state.lastResult = res;
+    rotation.lastRosterIds = res.rosterIds;
+    saveRotation();
+    renderPlayers();
+    renderResults();
+  });
+
 
   els.copyBtn.addEventListener("click", async () => {
     if (!state.lastResult) { setError("Generate teams first."); return; }
@@ -1445,5 +2007,23 @@ els.joinGroupBtn && els.joinGroupBtn.addEventListener("click", async () => {
   renderResults();
 })();
 </script>
+
+  <!-- Mobile sticky action bar -->
+  <div id="stickyBar" class="stickyBar" aria-label="Quick actions">
+    <div class="inner">
+      <div class="stickyMeta">
+        <div>Selected: <strong id="stickySel">0</strong> · Needed: <strong id="stickyNeed">0</strong></div>
+        <div style="opacity:.85">Quick actions</div>
+      </div>
+      <div class="stickyBtns">
+        <button id="stickyGen" class="primary">Generate</button>
+        <button id="stickyRegen" class="ghost">Re-roll</button>
+      </div>
+      <div class="stickyMore">
+        <button id="stickyClear" class="ghost" title="Clear Locks">Clear</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
