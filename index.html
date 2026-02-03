@@ -656,7 +656,7 @@
     const sorted = state.players.slice().sort((a,b)=>overall(b)-overall(a));
     for (const p of sorted){
       const item = document.createElement("div");
-      item.className = "playerCard" + (disabled ? " disabled" : "");
+      item.className = "playerCard";
       item.style.cursor = "default";
 
       const meta = document.createElement("div");
@@ -735,7 +735,7 @@
       const need = totalNeeded();
       const disabled = !on && state.selectedToday.size >= need;
       const item = document.createElement("div");
-      item.className = "playerCard";
+      item.className = "playerCard" + (disabled ? " disabled" : "");
       item.addEventListener("click", () => {
         const need = totalNeeded();
         if (disabled) {
