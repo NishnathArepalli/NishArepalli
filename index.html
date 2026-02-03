@@ -1,10 +1,11 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pickup Team Balancer</title>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Pickup Team Balancer</title>
+<style>
 
     :root{
       --bg1:#070a14;
@@ -278,8 +279,32 @@
       .title{font-size:24px}
       h2{font-size:18px}
     }
-</style>
 
+
+/* v8 flow screens + compact header */
+.headerRight{display:flex;gap:10px;align-items:center}
+#changeGroupBtn{display:none;width:auto}
+.stepNav{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.stepBtn{width:auto;flex:1;min-width:100px;border-radius:999px;padding:10px 12px;font-weight:800;opacity:.9}
+.stepBtn.active{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.55)}
+.screens{margin-top:12px}
+.screen{display:none;min-height:calc(100vh - 210px)}
+.screen.active{display:block}
+.manageDetails{margin-top:12px;border:1px solid rgba(36,48,90,.65);border-radius:14px;background:rgba(8,12,25,.35);padding:10px}
+.manageDetails > summary{cursor:pointer;font-weight:900;list-style:none}
+.manageDetails > summary::-webkit-details-marker{display:none}
+.manageDetails > summary:after{content:"›";float:right;opacity:.7;transform:rotate(90deg)}
+.manageDetails[open] > summary:after{transform:rotate(-90deg)}
+/* Make the old Player Database section title compact inside details */
+.manageDetails .sectionTitle{margin-top:10px}
+/* Mobile: tighter header height */
+@media(max-width:700px){
+  .top{align-items:flex-start}
+  .title{font-size:18px}
+  .sub{font-size:12px}
+  .screen{min-height:calc(100vh - 220px)}
+}
+</style>
 <style>
 
     :root{
@@ -499,246 +524,30 @@
     }
 
   </style>
-
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div>
-        <div class="title">Pickup Team Balancer</div>
-        <div class="sub">No login. Saves locally on this device. Export/Import to move it to another phone.</div>
-      </div>
-    </div>
-
-    <div class="navTabs" aria-label="Jump to section">
-      <a class="navTab" href="#cloudSection">Cloud</a>
-      <a class="navTab" href="#playersSection">Players</a>
-      <a class="navTab" href="#teamsSection">Teams</a>
-      <a class="navTab" href="#resultsSection">Results</a>
-    </div>
-
-    <div id="cloudSection" class="card cloudCard">
-      <details id="cloudDetails" class="cloudDetails">
-        <summary>
-          <span class="cloudTitle">Cloud & Share</span>
-          <span id="cloudStatus" class="pill pillInline">Local only</span>
-        </summary>
-
-        <div class="row cloudRow" style="margin-top:10px">
-          <div style="flex:1.2;min-width:220px">
-            <label style="margin-bottom:6px">Group code (shared roster)</label>
-            <input id="groupCode" placeholder="e.g., SATURDAYRUN" />
-          </div>
-          <div style="min-width:160px">
-            <label style="margin-bottom:6px"> </label>
-            <button id="joinGroupBtn" class="primary">Join / Create</button>
-          </div>
-        </div>
-
-        <div class="row cloudActions" style="margin-top:10px">
-          <button id="inviteBtn" class="ghost" title="Copy a link that auto-joins this group">Copy Invite Link</button>
-          <button id="exportBtn" class="ghost">Export Players</button>
-          <button id="importBtn" class="ghost">Import Players</button>
-          <input id="importFile" type="file" accept="application/json" style="display:none" />
-        </div>
-
-        <div class="note smallNote" style="margin-top:10px">
-          Tip: Share the invite link with your friends. They’ll auto-join the same group code when they open it.
-        </div>
-      </details>
-    </div>
-
-<div id="errorBox" class="card" style="display:none;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.08);margin-top:12px">
-      <div style="font-weight:800">Action needed</div>
-      <div id="errorText" class="note" style="margin-top:6px"></div>
-    </div>
-
-    <div class="grid">
-      <div class="card" id="playersSection">
-        <div class="sectionTitle">
-          <h2 style="margin:0">Player Database</h2>
-          <div class="pill" id="advancedToggle" title="Show/hide extra ratings and tags">Advanced: Off</div>
-        </div>
-
-        <div class="row">
-          <div style="flex:1.2">
-            <label>Name</label>
-            <input id="pName" placeholder="e.g., Nish" />
-          </div>
-          <div>
-            <label>Preset (optional)</label>
-            <select id="pPreset">
-              <option value="">None</option>
-              <option value="shooter">Shooter</option>
-              <option value="lock">Lockdown Defender</option>
-              <option value="big">Big</option>
-              <option value="slasher">Slasher</option>
-              <option value="all">All-around</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div>
-            <label>Offense (1–10)</label>
-            <div id="offBtns" class="btnGroup"></div>
-          </div>
-          <div>
-            <label>Defense (1–10)</label>
-            <div id="defBtns" class="btnGroup"></div>
-          </div>
-          <div>
-            <label>Rebounding (1–10)</label>
-            <div id="rebBtns" class="btnGroup"></div>
-          </div>
-        </div>
-
-        <div id="advancedBox" style="display:none;margin-top:10px">
-          <div class="row">
-            <div>
-              <label>Hustle / Stamina (1–10)</label>
-              <div id="husBtns" class="btnGroup"></div>
-            </div>
-            <div>
-              <label>Position tag (optional)</label>
-              <select id="pPos">
-                <option value="">None</option>
-                <option value="G">Guard</option>
-                <option value="W">Wing</option>
-                <option value="B">Big</option>
-              </select>
-              <div class="note" style="margin-top:6px">Used as a light “size” proxy to avoid teams stacked with all bigs/guards.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div style="flex:2">
-            <label>Notes (optional)</label>
-            <input id="pNotes" placeholder="e.g., Big / Shooter / Ball handler" />
-          </div>
-          <div class="inline" style="justify-content:end">
-            <button id="saveBtn" class="primary">Add Player</button>
-            <button id="cancelBtn" class="ghost" style="display:none;width:auto">Cancel</button>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="row" style="margin-bottom:10px;align-items:center">
-          <div class="pill"><span style="opacity:.8">Selected today:</span> <strong id="selCount">0</strong></div>
-          <div class="pill"><span style="opacity:.8">Needed for run:</span> <strong id="needCount">10</strong></div>
-          <div class="pill"><span style="opacity:.8">Weights:</span> <strong id="weightsText">Off 40% / Def 40% / Reb 20%</strong></div>
-        </div>
-
-        <div id="playerList" class="list"></div>
-      </div>
-
-      <div class="card" id="teamsSection">
-        <h2>Generate Teams</h2>
-
-        <div class="row">
-          <div>
-            <label>Game format</label>
-            <select id="gameSize">
-              <option value="3">3v3</option>
-              <option value="4">4v4</option>
-              <option value="5" selected>5v5</option>
-            </select>
-          </div>
-          <div>
-            <label># of teams</label>
-            <select id="numTeams">
-              <option value="2" selected>2 teams</option>
-              <option value="3">3 teams (rotate)</option>
-              <option value="4">4 teams (rotate)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="toggleRow" style="margin-top:10px">
-          <div class="pill" id="captainToggle" title="Enable drag-and-drop editing of teams">Captain Mode: Off</div>
-          <div class="pill" id="stabilityToggle" title="Prefer minimal changes on regenerate">Stability: Off</div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <button id="genBtn" class="primary">Generate Teams</button>
-          <button id="regenBtn" class="ghost">Regenerate</button>
-          <button id="clearLocksBtn" class="ghost">Clear Locks</button>
-        </div>
-
-<div class="row" style="margin-top:10px">
-          <button id="nextGameBtn" class="primary">Next Game</button>
-          <button id="resetRotationBtn" class="ghost">Reset Rotation</button>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <button id="copyBtn" class="small ghost">Copy Teams</button>
-          <button id="shareBtn" class="small ghost">Share</button>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="card" style="background:rgba(8,12,25,.35);margin-bottom:12px">
-          <div class="sectionTitle">
-            <div style="font-weight:800">Balancing Weights</div>
-            <select id="weightPreset" class="smallInput" style="max-width:220px">
-              <option value="custom">Custom</option>
-              <option value="default">Default (40/40/20)</option>
-              <option value="defense">Defense First</option>
-              <option value="offense">Run & Gun</option>
-              <option value="rebounding">Boards Matter</option>
-              <option value="balanced">Balanced (33/33/34)</option>
-            </select>
-          </div>
-
-          <div class="row" style="margin-top:10px">
-            <div>
-              <label>Offense weight: <strong id="wOffTxt">40%</strong></label>
-              <input id="wOff" type="range" min="0" max="100" value="40" />
-            </div>
-            <div>
-              <label>Defense weight: <strong id="wDefTxt">40%</strong></label>
-              <input id="wDef" type="range" min="0" max="100" value="40" />
-            </div>
-            <div>
-              <label>Rebounding weight: <strong id="wRebTxt">20%</strong></label>
-              <input id="wReb" type="range" min="0" max="100" value="20" />
-            </div>
-          </div>
-
-          <div id="hustleWeightBox" style="display:none;margin-top:10px">
-            <div>
-              <label>Hustle weight: <strong id="wHusTxt">0%</strong></label>
-              <input id="wHus" type="range" min="0" max="100" value="0" />
-              <div class="note" style="margin-top:6px">Only applied when Advanced is On and players have Hustle ratings.</div>
-            </div>
-          </div>
-
-          <div class="note" style="margin-top:10px">
-            Sliders auto-normalize to 100%. Presets are optional; pick what matches the run.
-          </div>
-        </div>
-
-        <div id="resultsSection" style="scroll-margin-top:90px"><div id="results"></div></div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:14px">
-      <h2>Notes</h2>
-      <div class="note">
-        If you later want the whole group to share the same roster (shared link + cloud DB), this can be upgraded cleanly.
-      </div>
-    </div>
-  </div>
-
+<div class="wrap"><div class="top"><div><div class="title">Pickup Team Balancer</div><div class="sub">Join group → Pick players → Generate teams. Designed for phone use.</div></div><div class="headerRight"><span class="pill" id="activeGroupPill">No group</span><button class="small ghost" id="changeGroupBtn">Change group</button></div></div><div class="card" id="errorBox" style="display:none;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.08);margin-top:12px"><div style="font-weight:800">Action needed</div><div class="note" id="errorText" style="margin-top:6px"></div></div><div class="stepNav"><button class="stepBtn ghost" id="stepCloud">1. Cloud</button><button class="stepBtn ghost" id="stepToday">2. Today</button><button class="stepBtn ghost" id="stepTeams">3. Teams</button></div><div class="screens"><section class="screen active" id="screenCloud"><div class="card"><h2>Cloud</h2><div class="note">Enter a group code to use the shared roster. Example: SATURDAYRUN. You can also open an invite link that auto-fills this.</div><div class="row"><div style="flex:1.4;min-width:220px"><label>Group code</label><input id="groupCode" placeholder="e.g., SATURDAYRUN"/></div><div style="min-width:160px"><label> </label><button class="primary" id="joinGroupBtn">Join / Create</button></div></div><div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><span class="pill" id="cloudStatus">Not connected</span><button class="small ghost" id="copyInviteBtn">Copy Invite Link</button></div></div></section><section class="screen" id="screenToday"><div class="card"><h2>Who is playing today?</h2><div class="note">Tap players to select. You can add/edit roster below if needed.</div><div class="row"><div class="pill"><span>Selected: </span><strong id="selCount">0</strong></div><div class="pill"><span>Needed: </span><strong id="needCount">0</strong></div></div><div class="row"><button class="small ghost" id="selectAllBtn">Select all</button><button class="small ghost" id="selectNoneBtn">Select none</button></div><div class="list" id="playerList"></div><div class="row"><button class="primary" id="toTeamsBtn">Continue →</button></div><div class="divider"></div><details class="manageDetails" id="manageRoster"><summary>Manage roster (add/edit players)</summary></details></div></section><section class="screen" id="screenTeams"><div class="card"><h2>Generate teams</h2><div class="note">Choose format, then generate. Re-roll to try another balanced split.</div><div class="" id="results"></div></div></section></div><div aria-label="Quick actions" class="stickyBar" id="stickyBar">
+<div class="inner">
+<div class="stickyMeta">
+<div>Selected: <strong id="stickySel">0</strong> · Needed: <strong id="stickyNeed">0</strong></div>
+<div style="opacity:.85">Quick actions</div>
+</div>
+<div class="stickyBtns">
+<button class="primary" id="stickyGen">Generate</button>
+<button class="ghost" id="stickyRegen">Re-roll</button>
+</div>
+<div class="stickyMore">
+<button class="ghost" id="stickyClear" title="Clear Locks">Clear</button>
+</div>
+</div>
+</div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (async () => {
   // Optional cloud sync via Supabase.
   // To enable: paste your values from Supabase Settings → API.
-  const SUPABASE_URL = "";        // e.g., "https://xxxx.supabase.co"
-  const SUPABASE_ANON_KEY = "";   // anon public key
+  const SUPABASE_URL = "https://qkfgnsytldnhenhfqhvr.supabase.co";        // e.g., "https://xxxx.supabase.co"
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZmduc3l0bGRuaGVuaGZxaHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTIwOTEsImV4cCI6MjA4NTAyODA5MX0.I9JcTBoZpxT9eTz8dGP_7kXeH0fqu7A_qJ5NK7HknGE";   // anon public key
   const supabaseConfigured = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
   const supabase = (supabaseConfigured && window.supabase)
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -764,29 +573,47 @@
     errorBox: document.getElementById("errorBox"),
     errorText: document.getElementById("errorText"),
 
+    // flow / header
+    activeGroupPill: document.getElementById("activeGroupPill"),
+    changeGroupBtn: document.getElementById("changeGroupBtn"),
+    stepCloud: document.getElementById("stepCloud"),
+    stepToday: document.getElementById("stepToday"),
+    stepTeams: document.getElementById("stepTeams"),
+    screenCloud: document.getElementById("screenCloud"),
+    screenToday: document.getElementById("screenToday"),
+    screenTeams: document.getElementById("screenTeams"),
+
+    // cloud
     groupCode: document.getElementById("groupCode"),
     joinGroupBtn: document.getElementById("joinGroupBtn"),
     cloudStatus: document.getElementById("cloudStatus"),
+    copyInviteBtn: document.getElementById("copyInviteBtn"),
+
+    // today
     playerList: document.getElementById("playerList"),
     selCount: document.getElementById("selCount"),
     needCount: document.getElementById("needCount"),
-    weightsText: document.getElementById("weightsText"),
+    selectAllBtn: document.getElementById("selectAllBtn"),
+    selectNoneBtn: document.getElementById("selectNoneBtn"),
+    toTeamsBtn: document.getElementById("toTeamsBtn"),
 
+    // roster management (inside details)
+    weightsText: document.getElementById("weightsText"),
     pName: document.getElementById("pName"),
     pPreset: document.getElementById("pPreset"),
     pNotes: document.getElementById("pNotes"),
     pPos: document.getElementById("pPos"),
     saveBtn: document.getElementById("saveBtn"),
     cancelBtn: document.getElementById("cancelBtn"),
-
     offBtns: document.getElementById("offBtns"),
     defBtns: document.getElementById("defBtns"),
     rebBtns: document.getElementById("rebBtns"),
-    husBtns: document.getElementById("husBtns"),
-
+    hustleWrap: document.getElementById("hustleWrap"),
+    hustleBtns: document.getElementById("hustleBtns"),
+    posWrap: document.getElementById("posWrap"),
     advancedToggle: document.getElementById("advancedToggle"),
-    advancedBox: document.getElementById("advancedBox"),
 
+    // teams
     gameSize: document.getElementById("gameSize"),
     numTeams: document.getElementById("numTeams"),
     genBtn: document.getElementById("genBtn"),
@@ -794,36 +621,20 @@
     clearLocksBtn: document.getElementById("clearLocksBtn"),
     results: document.getElementById("results"),
 
-    exportBtn: document.getElementById("exportBtn"),
-    importBtn: document.getElementById("importBtn"),
-    importFile: document.getElementById("importFile"),
-
-    stickySel: document.getElementById("stickySel"),
-    stickyNeed: document.getElementById("stickyNeed"),
-    stickyGen: document.getElementById("stickyGen"),
-    stickyRegen: document.getElementById("stickyRegen"),
-    stickyClear: document.getElementById("stickyClear"),
-
     // weights
-    weightPreset: document.getElementById("weightPreset"),
+    presetWeights: document.getElementById("presetWeights"),
     wOff: document.getElementById("wOff"),
     wDef: document.getElementById("wDef"),
     wReb: document.getElementById("wReb"),
-    wHus: document.getElementById("wHus"),
-    wOffTxt: document.getElementById("wOffTxt"),
-    wDefTxt: document.getElementById("wDefTxt"),
-    wRebTxt: document.getElementById("wRebTxt"),
-    wHusTxt: document.getElementById("wHusTxt"),
-    hustleWeightBox: document.getElementById("hustleWeightBox"),
+    wOffLabel: document.getElementById("wOffLabel"),
+    wDefLabel: document.getElementById("wDefLabel"),
+    wRebLabel: document.getElementById("wRebLabel"),
 
-    // extras
-    captainToggle: document.getElementById("captainToggle"),
-    stabilityToggle: document.getElementById("stabilityToggle"),
-    copyBtn: document.getElementById("copyBtn"),
-    shareBtn: document.getElementById("shareBtn"),
-    inviteBtn: document.getElementById("inviteBtn"),
-    nextGameBtn: document.getElementById("nextGameBtn"),
-    resetRotationBtn: document.getElementById("resetRotationBtn"),
+    // sticky
+    stickyBar: document.getElementById("stickyBar"),
+    stickyGenerate: document.getElementById("stickyGenerate"),
+    stickyReroll: document.getElementById("stickyReroll"),
+    stickyClear: document.getElementById("stickyClear")
   };
 
   const setError = (msg) => {
@@ -867,209 +678,58 @@
     return s || { selectedIds: null };
   })();
 
-
-  const STORAGE_KEY_ROTATION = "pickup_team_balancer_v2_rotation";
-  let rotation = (() => {
-    const r = loadJSON(STORAGE_KEY_ROTATION, { queueIds: null, lastRosterIds: null });
-    return r || { queueIds: null, lastRosterIds: null };
-  })();
-  const saveRotation = () => saveJSON(STORAGE_KEY_ROTATION, rotation);
-
-const STORAGE_KEY_CLOUD = "pickup_team_balancer_v2_cloud";
-
-const cloudCfg = (() => {
-  const c = loadJSON(STORAGE_KEY_CLOUD, { groupCode: "", groupId: null });
-  return c || { groupCode: "", groupId: null };
-})();
-
-  // Draft ratings (button-driven)
-  let draft = { offense: 6, defense: 6, rebounding: 6, hustle: 6 };
-
-  const makeRateButtons = (rootEl, key) => {
-    rootEl.innerHTML = "";
-    for (let i=1;i<=10;i++){
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "rateBtn" + (draft[key] === i ? " active" : "");
-      b.textContent = String(i);
-      b.addEventListener("click", () => {
-        draft[key] = i;
-        renderDraftButtons();
-        // switching off preset when manual adjustment happens
-        els.pPreset.value = "";
-      });
-      rootEl.appendChild(b);
-    }
-  };
-
-  const renderDraftButtons = () => {
-    const update = (rootEl, key) => {
-      Array.from(rootEl.children).forEach((btn, idx) => {
-        const val = idx + 1;
-        btn.classList.toggle("active", draft[key] === val);
-      });
-    };
-    update(els.offBtns, "offense");
-    update(els.defBtns, "defense");
-    update(els.rebBtns, "rebounding");
-    update(els.husBtns, "hustle");
-  };
-
-  makeRateButtons(els.offBtns, "offense");
-  makeRateButtons(els.defBtns, "defense");
-  makeRateButtons(els.rebBtns, "rebounding");
-  makeRateButtons(els.husBtns, "hustle");
-  renderDraftButtons();
-
-  const applyPreset = (preset) => {
-    const P = {
-      shooter:  { offense: 8, defense: 5, rebounding: 5, hustle: 6 },
-      lock:     { offense: 5, defense: 9, rebounding: 6, hustle: 7 },
-      big:      { offense: 6, defense: 7, rebounding: 9, hustle: 6 },
-      slasher:  { offense: 8, defense: 6, rebounding: 6, hustle: 7 },
-      all:      { offense: 7, defense: 7, rebounding: 7, hustle: 7 },
-    };
-    const v = P[preset];
-    if (!v) return;
-    draft.offense = v.offense;
-    draft.defense = v.defense;
-    draft.rebounding = v.rebounding;
-    draft.hustle = v.hustle;
-    renderDraftButtons();
-  };
-
-  // Local players
-const loadPlayersLocal = () => {
-  const parsed = loadJSON(STORAGE_KEY_PLAYERS, []);
-  return Array.isArray(parsed) ? parsed : [];
-};
-const savePlayersLocal = (players) => saveJSON(STORAGE_KEY_PLAYERS, players);
-
-// Cloud helpers (Supabase)
-const normalizeCode = (s) => String(s || "").trim().toUpperCase().replace(/\s+/g, "");
-const setCloudStatus = (text, tone="") => {
-  if (!els.cloudStatus) return;
-  els.cloudStatus.textContent = text;
-  els.cloudStatus.classList.remove("ok","warn","bad");
-  if (tone) els.cloudStatus.classList.add(tone);
-};
-
-const getOrCreateGroup = async (code) => {
-  if (!supabase) throw new Error("Supabase is not configured.");
-  const clean = normalizeCode(code);
-  if (!clean) throw new Error("Group code is required.");
-  const { data: found, error: fErr } = await supabase
-    .from("groups")
-    .select("*")
-    .eq("code", clean)
-    .maybeSingle();
-  if (fErr) throw fErr;
-  if (found) return found;
-
-  const { data: created, error: cErr } = await supabase
-    .from("groups")
-    .insert({ code: clean })
-    .select("*")
-    .single();
-  if (cErr) throw cErr;
-  return created;
-};
-
-const loadPlayersCloud = async (groupId) => {
-  const { data, error } = await supabase
-    .from("players")
-    .select("*")
-    .eq("group_id", groupId)
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data || []).map(x => ({
-    id: x.id,
-    name: x.name,
-    offense: clamp(Number(x.offense ?? 6), 1, 10),
-    defense: clamp(Number(x.defense ?? 6), 1, 10),
-    rebounding: clamp(Number(x.rebounding ?? 6), 1, 10),
-    hustle: (x.hustle === null || x.hustle === undefined) ? null : clamp(Number(x.hustle), 1, 10),
-    pos: x.position || "",
-    notes: x.notes || ""
-  }));
-};
-
-const upsertPlayerCloud = async (groupId, p) => {
-  const payload = {
-    group_id: groupId,
-    name: p.name,
-    offense: p.offense,
-    defense: p.defense,
-    rebounding: p.rebounding,
-    hustle: (p.hustle === null || p.hustle === undefined || p.hustle === "") ? null : p.hustle,
-    position: (p.pos || null),
-    notes: p.notes || null
-  };
-
-  if (p.id) {
-    const { error } = await supabase.from("players").update(payload).eq("id", p.id);
-    if (error) throw error;
-    return p.id;
-  } else {
-    const { data, error } = await supabase.from("players").insert(payload).select("id").single();
-    if (error) throw error;
-    return data.id;
-  }
-};
-
-const deletePlayerCloud = async (id) => {
-  const { error } = await supabase.from("players").delete().eq("id", id);
-  if (error) throw error;
-};
-
-let cloudSub = null;
-const subscribePlayersCloud = (groupId, onChange) => {
-  if (!supabase) return null;
-  try { if (cloudSub) supabase.removeChannel(cloudSub); } catch {}
-  cloudSub = supabase
-    .channel("players-" + groupId)
-    .on("postgres_changes",
-      { event: "*", schema: "public", table: "players", filter: `group_id=eq.${groupId}` },
-      () => onChange()
-    )
-    .subscribe();
-  return cloudSub;
-};
-
-// Storage mode
-const isCloud = () => !!(state.groupId && supabase);
-
-const storageLoadPlayers = async () => {
-  if (state.groupId && supabase) return await loadPlayersCloud(state.groupId);
-  return loadPlayersLocal();
-};
-
-const storageUpsertPlayer = async (p) => {
-  if (state.groupId && supabase) {
-    const id = await upsertPlayerCloud(state.groupId, p);
-    return id;
-  }
-  // local
-  return (p.id || uid());
-};
-
-const storageDeletePlayer = async (id) => {
-  if (state.groupId && supabase) return await deletePlayerCloud(id);
-  return;
-};
-
-// state
   let state = {
     players: [],
     groupId: null,
     groupCode: "",
     selected: new Set(),
-    playing: new Set(), // who is playing this game (rotation)
     locks: {},        // playerId -> teamIndex
     editId: null,
     lastResult: null, // {teams, objective, needed, rosterIds, deltas, ...}
 
 };
+
+  // ---------- Flow helpers ----------
+  const setActiveStep = (step) => {
+    const map = { cloud: [els.stepCloud, els.screenCloud], today: [els.stepToday, els.screenToday], teams: [els.stepTeams, els.screenTeams] };
+    for (const k of Object.keys(map)) {
+      const [btn, screen] = map[k];
+      if (btn) btn.classList.toggle("active", k === step);
+      if (screen) screen.classList.toggle("active", k === step);
+    }
+    // Sticky bar only on Teams screen
+    if (els.stickyBar) els.stickyBar.style.display = (step === "teams") ? "flex" : "none";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const updateHeader = () => {
+    const inGroup = !!state.groupId;
+    if (els.activeGroupPill) els.activeGroupPill.textContent = inGroup ? `Group: ${state.groupCode}` : "No group";
+    if (els.changeGroupBtn) els.changeGroupBtn.style.display = inGroup ? "inline-flex" : "none";
+  };
+
+  const todayStorageKey = () => state.groupCode ? `pickup_team_balancer_today_${state.groupCode}` : "pickup_team_balancer_today";
+  const loadSelectedToday = () => {
+    const arr = loadJSON(todayStorageKey(), []);
+    const existing = new Set(state.players.map(p=>p.id));
+    const filtered = Array.isArray(arr) ? arr.filter(id => existing.has(id)) : [];
+    return new Set(filtered);
+  };
+  const saveSelectedToday = () => {
+    if (!state.groupCode) return;
+    saveJSON(todayStorageKey(), Array.from(state.selected));
+  };
+
+  const updateTodayCTA = () => {
+    refreshNeedCounts();
+    const needed = totalNeeded();
+    const ok = state.selected.size >= needed && !!state.groupId;
+    if (els.toTeamsBtn) {
+      els.toTeamsBtn.disabled = !ok;
+      els.toTeamsBtn.textContent = ok ? "Continue →" : `Select ${needed} players to continue`;
+    }
+  };
+
 
 // Init players from local or cloud (if previously joined)
 state.groupId = cloudCfg.groupId || null;
@@ -1125,33 +785,6 @@ if (state.groupId && supabase) {
   restoreSelection();
 
   const selectedIdsInPlayerOrder = () => state.players.filter(p => state.selected.has(p.id)).map(p => p.id);
-
-  const syncRotationQueue = () => {
-    // Keep queueIds only for currently selected players; append newly selected to the end.
-    const selectedOrdered = selectedIdsInPlayerOrder();
-    if (!Array.isArray(rotation.queueIds) || rotation.queueIds.length === 0) {
-      rotation.queueIds = selectedOrdered.slice();
-      saveRotation();
-      return;
-    }
-    const selectedSet = new Set(selectedOrdered);
-    rotation.queueIds = rotation.queueIds.filter(id => selectedSet.has(id));
-    const inQueue = new Set(rotation.queueIds);
-    for (const id of selectedOrdered) if (!inQueue.has(id)) rotation.queueIds.push(id);
-    saveRotation();
-  };
-
-  const computeDefaultPlaying = () => {
-    const needed = Number(els.gameSize.value) * Number(els.numTeams.value);
-    syncRotationQueue();
-    const selectedSet = new Set(selectedIdsInPlayerOrder());
-    // Ensure playing is subset of selected
-    state.playing = new Set(Array.from(state.playing).filter(id => selectedSet.has(id)));
-    if (state.playing.size !== needed) {
-      const next = rotation.queueIds.slice(0, needed);
-      state.playing = new Set(next);
-    }
-  };
 
 
   const persistSelection = () => {
@@ -1314,14 +947,9 @@ if (state.groupId && supabase) {
         if (cb.checked) state.selected.add(p.id);
         else state.selected.delete(p.id);
         refreshNeedCounts();
-        syncRotationQueue();
-        // If current playing set became invalid, recompute
-        const neededNow = totalNeeded();
-        const selSet = new Set(selectedIdsInPlayerOrder());
-        state.playing = new Set(Array.from(state.playing).filter(id => selSet.has(id)));
-        if (state.playing.size !== neededNow) computeDefaultPlaying();
+        saveSelectedToday();
         renderPlayers();
-        renderResults();
+        updateTodayCTA();
       });
 
       // Tap anywhere on the row to toggle selection (mobile-friendly)
@@ -1357,9 +985,6 @@ if (state.groupId && supabase) {
       }
       if (state.locks[p.id] !== undefined) {
         const t = document.createElement("span"); t.className = "tag"; t.textContent = `Locked: Team ${state.locks[p.id]+1}`; tags.appendChild(t);
-      }
-      if (state.playing && state.playing.has(p.id)) {
-        const t = document.createElement("span"); t.className = "tag"; t.textContent = "Playing now"; tags.appendChild(t);
       }
 
       const controls = document.createElement("div");
@@ -1462,14 +1087,20 @@ if (state.groupId && supabase) {
       return null;
     }
 
-    // pick who plays this game (rotation queue); fallback to top overall if needed
-    computeDefaultPlaying();
-    let roster = state.players.filter(p => state.playing.has(p.id));
-    if (roster.length !== needed) {
-      roster = selectedPlayers.slice().sort((a,b)=>overall(b)-overall(a)).slice(0, needed);
-      state.playing = new Set(roster.map(p=>p.id));
+    // pick who plconst generateTeams = (iterations = 9000) => {
+    setError("");
+    const teamSize = Number(els.gameSize.value);
+    const numTeams = Number(els.numTeams.value);
+    const needed = teamSize * numTeams;
+
+    const selectedPlayers = state.players.filter(p => state.selected.has(p.id));
+    if (selectedPlayers.length < needed) {
+      setError(`Not enough selected players. Need ${needed}, but you selected ${selectedPlayers.length}.`);
+      return null;
     }
 
+    // Use exactly the players for today; if more than needed are selected, take the top N by overall.
+    const roster = selectedPlayers.slice().sort((a,b)=>overall(b)-overall(a)).slice(0, needed);
 
     // validate locks
     const counts = Array(numTeams).fill(0);
@@ -1508,7 +1139,7 @@ if (state.groupId && supabase) {
 
     for (let i=0;i<iterations;i++){
       let perm;
-      if (i % 35 === 0) {
+      if (i % 25 === 0) {
         perm = base.slice().sort(()=>Math.random()-0.5);
       } else {
         perm = base.slice();
@@ -1519,47 +1150,14 @@ if (state.groupId && supabase) {
           perm.splice(c, end-c, ...part);
         }
       }
-
-      // stability: slight bias to keep prior grouping by nudging permutation toward previous team buckets
-      if (settings.stability && state.lastResult && state.lastResult.teams && i % 7 === 0) {
-        const prevMap = new Map();
-        state.lastResult.teams.forEach((team, ti) => team.forEach(p => prevMap.set(p.id, ti)));
-        perm = perm.slice().sort((a,b) => (prevMap.get(a.id) ?? 99) - (prevMap.get(b.id) ?? 99));
-        // small random noise
-        perm = perm.map(x=>({x, r:Math.random()})).sort((a,b)=> (a.r-b.r)*0.15 + 0.85*( (prevMap.get(a.x.id)??99)-(prevMap.get(b.x.id)??99) )).map(o=>o.x);
-      }
-
       const teams = build(perm);
       const obj = objective(teams);
       if (obj < bestObj) { bestObj = obj; bestTeams = teams; }
     }
 
     const deltas = computeDeltas(bestTeams);
-    const benchIds = selectedPlayers.map(p=>p.id).filter(id => !new Set(roster.map(p=>p.id)).has(id));
-    return { teams: bestTeams, objective: bestObj, needed, rosterIds: roster.map(p=>p.id), benchIds, deltas };
-  };
-
-  const teamsToText = (res) => {
-    if (!res || !res.teams) return "";
-    const lines = [];
-    res.teams.forEach((team, i) => {
-      lines.push(`Team ${i+1}:`);
-      team.forEach(p => lines.push(`- ${p.name}${p.notes ? " ("+p.notes+")" : ""}`));
-      lines.push("");
-    });
-    const d = res.deltas || computeDeltas(res.teams);
-    lines.push(`Deltas: Overall ${d.overall.toFixed(1)} | Off ${d.offense.toFixed(0)} | Def ${d.defense.toFixed(0)} | Reb ${d.rebounding.toFixed(0)} | Bigs ${d.bigs.toFixed(0)} | Guards ${d.guards.toFixed(0)}`);
-    return lines.join("\n");
-  };
-
-  const renderResults = () => {
-    els.results.innerHTML = "";
-    const res = state.lastResult;
-    if (!res) {
-      const div = document.createElement("div");
-      div.className = "note";
-      div.innerHTML = `Select players who showed up, choose format (3v3 / 4v4 / 5v5), then click <strong>Generate Teams</strong>.
-        <div style="margin-top:10px">Tip: Use <strong>Lock to team</strong> for special cases. Turn on <strong>Captain Mode</strong> to drag players between teams.</div>`;
+    return { teams: bestTeams, objective: bestObj, needed, rosterIds: roster.map(p=>p.id), deltas };
+  };ms.</div>`;
       els.results.appendChild(div);
       return;
     }
@@ -1614,7 +1212,7 @@ if (state.groupId && supabase) {
         .map(p => p.name);
       benchCard.innerHTML = `<div class="teamHeader">
           <div class="teamTitle">Sitting out (${names.length})</div>
-          <div class="score">Use <strong>Next Game</strong> to rotate fairly</div>
+          <div class="score">Tip: If you have extra players, just select who is playing today.</div>
         </div>
         <div class="note" style="margin-top:8px">${names.map(n=>`<span class="tag">${n}</span>`).join(" ")}</div>`;
       els.results.appendChild(benchCard);
@@ -1791,8 +1389,8 @@ if (state.groupId && supabase) {
   els.wReb.addEventListener("input", updateWeightsFromSliders);
   els.wHus.addEventListener("input", updateWeightsFromSliders);
 
-  els.gameSize.addEventListener("change", () => { refreshNeedCounts(); state.lastResult = null; renderResults(); });
-  els.numTeams.addEventListener("change", () => { refreshNeedCounts(); renderPlayers(); state.lastResult = null; renderResults(); });
+  els.gameSize.addEventListener("change", () => { refreshNeedCounts(); updateTodayCTA(); state.lastResult = null; renderResults(); });
+  els.numTeams.addEventListener("change", () => { refreshNeedCounts(); renderPlayers(); updateTodayCTA(); state.lastResult = null; renderResults(); });
 
   els.saveBtn.addEventListener("click", async () => {
   setError("");
@@ -1856,37 +1454,47 @@ if (state.groupId && supabase) {
 const joinCloudGroup = async (code) => {
   setError("");
   if (!supabaseConfigured || !supabase) {
-    setError("Cloud sync is not enabled yet. Paste SUPABASE_URL and SUPABASE_ANON_KEY in the script (Phase 4), then reload.");
+    setError("Cloud sync is not enabled yet. Paste SUPABASE_URL and SUPABASE_ANON_KEY in the script, then reload.");
     return false;
   }
+  code = (code || "").trim().toUpperCase();
+  if (!code) { setError("Please enter a group code."); return false; }
+
   try {
     const group = await getOrCreateGroup(code);
     state.groupId = group.id;
     state.groupCode = group.code;
     saveJSON(STORAGE_KEY_CLOUD, { groupCode: state.groupCode, groupId: state.groupId });
-    setCloudStatus(`Cloud: ${state.groupCode}`, "ok");
+
+    setCloudStatus(`Connected: ${state.groupCode}`, "ok");
+    updateHeader();
 
     state.players = await storageLoadPlayers();
-    state.selected = new Set(state.players.map(p=>p.id));
-    state.playing = new Set();
-    syncRotationQueue();
-    computeDefaultPlaying();
+
+    // Load today's selection for this group (fallback = all players)
+    const sel = loadSelectedToday();
+    state.selected = sel.size ? sel : new Set(state.players.map(p=>p.id));
+    saveSelectedToday();
 
     state.locks = {};
     state.lastResult = null;
+
     renderPlayers();
     renderResults();
+    updateTodayCTA();
 
+    // Live roster updates (if enabled) - keep today's selection valid
     subscribePlayersCloud(state.groupId, async () => {
       state.players = await storageLoadPlayers();
       const existing = new Set(state.players.map(p=>p.id));
       state.selected = new Set(Array.from(state.selected).filter(id => existing.has(id)));
-      if (state.selected.size === 0) state.players.forEach(p=>state.selected.add(p.id));
-      syncRotationQueue();
-      computeDefaultPlaying();
+      if (state.selected.size === 0) state.players.forEach(p => state.selected.add(p.id));
+      saveSelectedToday();
       renderPlayers();
-      renderResults();
+      updateTodayCTA();
     });
+
+    setActiveStep("today");
     return true;
   } catch (e) {
     setError("Could not join/create group. Verify your Supabase tables/policies and try again.");
@@ -1905,14 +1513,66 @@ try {
 } catch {}
 
 
+// Restore last group (optional)
+try {
+  const saved = loadJSON(STORAGE_KEY_CLOUD, null);
+  if (!state.groupId && saved && saved.groupCode && supabaseConfigured) {
+    els.groupCode.value = saved.groupCode;
+    await joinCloudGroup(saved.groupCode);
+  }
+} catch {}
+
+// Default screen
+updateHeader();
+setActiveStep(state.groupId ? "today" : "cloud");
 
 els.joinGroupBtn && els.joinGroupBtn.addEventListener("click", async () => {
   await joinCloudGroup(els.groupCode.value);
 });
 
+  // Step buttons (simple navigation)
+  els.stepCloud && els.stepCloud.addEventListener("click", () => setActiveStep("cloud"));
+  els.stepToday && els.stepToday.addEventListener("click", () => { if (state.groupId) setActiveStep("today"); });
+  els.stepTeams && els.stepTeams.addEventListener("click", () => { if (state.groupId) setActiveStep("teams"); });
+
+  // Change group = "log off"
+  els.changeGroupBtn && els.changeGroupBtn.addEventListener("click", () => {
+    state.groupId = null;
+    state.groupCode = "";
+    state.players = [];
+    state.selected = new Set();
+    state.locks = {};
+    state.lastResult = null;
+    saveJSON(STORAGE_KEY_CLOUD, { groupCode: "", groupId: null });
+    setCloudStatus("Not connected", "warn");
+    updateHeader();
+    renderPlayers();
+    renderResults();
+    setActiveStep("cloud");
+  });
+
+  // Today screen helpers
+  els.selectAllBtn && els.selectAllBtn.addEventListener("click", () => {
+    state.players.forEach(p => state.selected.add(p.id));
+    saveSelectedToday();
+    renderPlayers();
+    updateTodayCTA();
+  });
+  els.selectNoneBtn && els.selectNoneBtn.addEventListener("click", () => {
+    state.selected = new Set();
+    saveSelectedToday();
+    renderPlayers();
+    updateTodayCTA();
+  });
+  els.toTeamsBtn && els.toTeamsBtn.addEventListener("click", () => {
+    setActiveStep("teams");
+  });
+
+
+
 
   
-  els.inviteBtn && els.inviteBtn.addEventListener("click", async () => {
+  els.copyInviteBtn && els.copyInviteBtn.addEventListener("click", async () => {
     const code = normalizeCode(els.groupCode.value || state.groupCode);
     if (!code) { setError("Enter a group code first, then copy the invite link."); return; }
     const url = `${location.origin}${location.pathname}?group=${encodeURIComponent(code)}`;
@@ -1936,7 +1596,7 @@ els.genBtn.addEventListener("click", () => {
     const res = generateTeams(9500);
     if (!res) return;
     state.lastResult = res;
-    rotation.lastRosterIds = res.rosterIds;
+
     saveRotation();
     renderPlayers();
     renderResults();
@@ -1952,52 +1612,6 @@ els.genBtn.addEventListener("click", () => {
   if (els.stickyGen) els.stickyGen.addEventListener("click", () => els.genBtn.click());
   if (els.stickyRegen) els.stickyRegen.addEventListener("click", () => els.regenBtn.click());
   if (els.stickyClear) els.stickyClear.addEventListener("click", () => els.clearLocksBtn.click());
-
-  els.resetRotationBtn && els.resetRotationBtn.addEventListener("click", () => {
-    syncRotationQueue();
-    rotation.lastRosterIds = null;
-    saveRotation();
-    state.playing = new Set();
-    computeDefaultPlaying();
-    state.lastResult = null;
-    renderPlayers();
-    renderResults();
-  });
-
-  els.nextGameBtn && els.nextGameBtn.addEventListener("click", () => {
-    const needed = Number(els.gameSize.value) * Number(els.numTeams.value);
-    syncRotationQueue();
-
-    // If we don't have a last roster, just generate once.
-    if (!state.lastResult || !Array.isArray(state.lastResult.rosterIds)) {
-      const res = generateTeams(9500);
-      if (!res) return;
-      state.lastResult = res;
-      rotation.lastRosterIds = res.rosterIds;
-      saveRotation();
-      renderPlayers();
-      renderResults();
-      return;
-    }
-
-    const last = state.lastResult.rosterIds.slice();
-    // Move last game's players to end of queue
-    const setLast = new Set(last);
-    rotation.queueIds = rotation.queueIds.filter(id => !setLast.has(id)).concat(last);
-    saveRotation();
-
-    // Select next group to play
-    const nextIds = rotation.queueIds.slice(0, needed);
-    state.playing = new Set(nextIds);
-
-    const res = generateTeams(9500);
-    if (!res) return;
-    state.lastResult = res;
-    rotation.lastRosterIds = res.rosterIds;
-    saveRotation();
-    renderPlayers();
-    renderResults();
-  });
 
 
   els.copyBtn.addEventListener("click", async () => {
@@ -2026,51 +1640,6 @@ els.genBtn.addEventListener("click", () => {
     }
   });
 
-  els.exportBtn.addEventListener("click", () => {
-    const blob = new Blob([JSON.stringify(state.players, null, 2)], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "pickup-team-balancer-players.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-
-  els.importBtn.addEventListener("click", () => els.importFile.click());
-  els.importFile.addEventListener("change", (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try{
-        const parsed = JSON.parse(String(reader.result || ""));
-        if (!Array.isArray(parsed)) throw new Error();
-
-        state.players = parsed.map(x => ({
-          id: x.id || uid(),
-          name: String(x.name || "").trim() || "Unnamed",
-          offense: clamp(Number(x.offense || 6), 1, 10),
-          defense: clamp(Number(x.defense || 6), 1, 10),
-          rebounding: clamp(Number(x.rebounding ?? x.playmaking ?? 6), 1, 10), // backwards compatible
-          hustle: (x.hustle === undefined ? undefined : clamp(Number(x.hustle || 6), 1, 10)),
-          pos: String(x.pos || ""),
-          notes: String(x.notes || "")
-        }));
-
-        savePlayersLocal(state.players);
-        state.selected = new Set(state.players.map(p=>p.id));
-        state.locks = {};
-        state.lastResult = null;
-        setError("");
-        renderPlayers();
-        renderResults();
-      } catch {
-        setError("Import failed. Use a JSON export created by this app.");
-      }
-    };
-    reader.readAsText(file);
-  });
-
   // Initial UI setup
   els.weightPreset.value = settings.weightPreset || "default";
   setAdvancedUI();
@@ -2082,23 +1651,7 @@ els.genBtn.addEventListener("click", () => {
   renderResults();
 })();
 </script>
-
-  <!-- Mobile sticky action bar -->
-  <div id="stickyBar" class="stickyBar" aria-label="Quick actions">
-    <div class="inner">
-      <div class="stickyMeta">
-        <div>Selected: <strong id="stickySel">0</strong> · Needed: <strong id="stickyNeed">0</strong></div>
-        <div style="opacity:.85">Quick actions</div>
-      </div>
-      <div class="stickyBtns">
-        <button id="stickyGen" class="primary">Generate</button>
-        <button id="stickyRegen" class="ghost">Re-roll</button>
-      </div>
-      <div class="stickyMore">
-        <button id="stickyClear" class="ghost" title="Clear Locks">Clear</button>
-      </div>
-    </div>
-  </div>
+<!-- Mobile sticky action bar -->
 
 </body>
 </html>
