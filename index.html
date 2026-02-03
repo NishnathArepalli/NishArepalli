@@ -222,7 +222,63 @@
       #genBtn,#regenBtn,#clearLocksBtn{padding:10px 12px}
     }
 
-  </style>
+  
+
+    /* --- Mobile-first nav + compact Cloud section --- */
+    html{font-size:16px}
+    .title{font-size:22px;line-height:1.15}
+    .sub{font-size:14px;margin-top:6px}
+    label{font-size:13px}
+
+    .navTabs{
+      display:flex;gap:10px;align-items:center;
+      margin:10px 0 12px 0;
+      overflow-x:auto;-webkit-overflow-scrolling:touch;
+      padding-bottom:2px;
+    }
+    .navTab{
+      flex:0 0 auto;
+      text-decoration:none;
+      color:rgba(233,238,255,.92);
+      border:1px solid rgba(36,48,90,.65);
+      background:rgba(8,12,25,.45);
+      padding:8px 12px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:13px;
+      line-height:1;
+      white-space:nowrap;
+    }
+    .navTab:active{transform:scale(.98)}
+    .navTab:focus{outline:2px solid rgba(99,102,241,.55);outline-offset:2px}
+
+    .cloudCard{padding:10px}
+    .cloudDetails summary{
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      list-style:none;
+    }
+    .cloudDetails summary::-webkit-details-marker{display:none}
+    .cloudTitle{font-weight:900;font-size:15px}
+    .pillInline{padding:6px 10px;font-size:12px}
+    .smallNote{font-size:13px}
+    .cloudRow > *{min-width:160px}
+
+    /* Make section jumps feel nice */
+    #cloudSection, #playersSection, #teamsSection, #resultsSection{scroll-margin-top:70px}
+
+    @media(max-width:700px){
+      .wrap{padding:12px}
+      .cloudActions button{width:100%}
+      .cloudActions{gap:8px}
+      .navTab{padding:9px 12px;font-size:14px}
+      .title{font-size:24px}
+      h2{font-size:18px}
+    }
+</style>
 
 <style>
 
@@ -452,34 +508,53 @@
         <div class="title">Pickup Team Balancer</div>
         <div class="sub">No login. Saves locally on this device. Export/Import to move it to another phone.</div>
       </div>
-      <div class="row" style="min-width:520px">
-        <div style="flex:1.2;min-width:220px">
-          <label style="margin-bottom:6px">Group code (shared roster)</label>
-          <input id="groupCode" placeholder="e.g., SATURDAYRUN" />
-        </div>
-        <div style="min-width:140px">
-          <label style="margin-bottom:6px">Cloud</label>
-          <button id="joinGroupBtn" class="small primary">Join / Create</button>
-        </div>
-        <div style="min-width:180px">
-          <label style="margin-bottom:6px">Status</label>
-          <div id="cloudStatus" class="pill" style="width:100%;justify-content:center">Local only</div>
-        </div>
-        <button id="inviteBtn" class="small ghost" title="Copy a link that auto-joins this group">Copy Invite Link</button>
-        <button id="exportBtn" class="small ghost">Export Players</button>
-        <button id="importBtn" class="small ghost">Import Players</button>
-        <input id="importFile" type="file" accept="application/json" style="display:none" />
-      </div>
-</div>
     </div>
 
-    <div id="errorBox" class="card" style="display:none;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.08);margin-top:12px">
+    <div class="navTabs" aria-label="Jump to section">
+      <a class="navTab" href="#cloudSection">Cloud</a>
+      <a class="navTab" href="#playersSection">Players</a>
+      <a class="navTab" href="#teamsSection">Teams</a>
+      <a class="navTab" href="#resultsSection">Results</a>
+    </div>
+
+    <div id="cloudSection" class="card cloudCard">
+      <details id="cloudDetails" class="cloudDetails">
+        <summary>
+          <span class="cloudTitle">Cloud & Share</span>
+          <span id="cloudStatus" class="pill pillInline">Local only</span>
+        </summary>
+
+        <div class="row cloudRow" style="margin-top:10px">
+          <div style="flex:1.2;min-width:220px">
+            <label style="margin-bottom:6px">Group code (shared roster)</label>
+            <input id="groupCode" placeholder="e.g., SATURDAYRUN" />
+          </div>
+          <div style="min-width:160px">
+            <label style="margin-bottom:6px"> </label>
+            <button id="joinGroupBtn" class="primary">Join / Create</button>
+          </div>
+        </div>
+
+        <div class="row cloudActions" style="margin-top:10px">
+          <button id="inviteBtn" class="ghost" title="Copy a link that auto-joins this group">Copy Invite Link</button>
+          <button id="exportBtn" class="ghost">Export Players</button>
+          <button id="importBtn" class="ghost">Import Players</button>
+          <input id="importFile" type="file" accept="application/json" style="display:none" />
+        </div>
+
+        <div class="note smallNote" style="margin-top:10px">
+          Tip: Share the invite link with your friends. They’ll auto-join the same group code when they open it.
+        </div>
+      </details>
+    </div>
+
+<div id="errorBox" class="card" style="display:none;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.08);margin-top:12px">
       <div style="font-weight:800">Action needed</div>
       <div id="errorText" class="note" style="margin-top:6px"></div>
     </div>
 
     <div class="grid">
-      <div class="card">
+      <div class="card" id="playersSection">
         <div class="sectionTitle">
           <h2 style="margin:0">Player Database</h2>
           <div class="pill" id="advancedToggle" title="Show/hide extra ratings and tags">Advanced: Off</div>
@@ -559,7 +634,7 @@
         <div id="playerList" class="list"></div>
       </div>
 
-      <div class="card">
+      <div class="card" id="teamsSection">
         <h2>Generate Teams</h2>
 
         <div class="row">
@@ -645,7 +720,7 @@
           </div>
         </div>
 
-        <div id="results"></div>
+        <div id="resultsSection" style="scroll-margin-top:90px"><div id="results"></div></div>
       </div>
     </div>
 
