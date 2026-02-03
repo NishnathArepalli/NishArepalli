@@ -668,7 +668,7 @@
     };
   };
 
-  let settings = (() => {
+  let settings = (async () => {
     const s = loadJSON(STORAGE_KEY_SETTINGS, defaults);
     return { ...defaults, ...s, weights: normalizeWeights(s.weights || defaults.weights) };
   })();
@@ -1508,7 +1508,7 @@ try {
   const g = qp.get("group");
   if (g && supabaseConfigured) {
     els.groupCode.value = g;
-    await joinCloudGroup(g);
+    joinCloudGroup(g);
   }
 } catch {}
 
