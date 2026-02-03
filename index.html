@@ -933,6 +933,7 @@ const base = roster.slice();
       state.lastResult = null;
       renderPlayers();
       renderTodayList();
+      refreshCounts();
       renderResults();
       subscribePlayers();
 
@@ -1060,6 +1061,7 @@ const base = roster.slice();
         state.selectedToday = new Set();
         renderPlayers();
         renderTodayList();
+        refreshCounts();
         renderResults();
         subscribePlayers();
         showTab("teams");
