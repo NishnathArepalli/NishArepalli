@@ -738,6 +738,10 @@
       item.className = "playerCard";
       item.addEventListener("click", () => {
         const need = totalNeeded();
+        if (disabled) {
+          setError(`This format needs exactly ${need} players. Unselect someone first.`);
+          return;
+        }
         if (state.selectedToday.has(p.id)) {
           state.selectedToday.delete(p.id);
           setError("");
