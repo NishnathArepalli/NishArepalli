@@ -344,7 +344,7 @@
   //  SUPABASE CONFIG (PASTE)
   // =========================
   const SUPABASE_URL = "https://qkfgnsytldnhenhfqhvr.supabase.co";        // e.g., "https://xxxx.supabase.co"
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZmduc3l0bGRuaGVuaGZxaHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTIwOTEsImV4cCI6MjA4NTAyODA5MX0.I9JcTBoZpxT9eTz8dGP_7kXeH0fqu7A_qJ5NK7HknGE";   // anon public key  // anon public key
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZmduc3l0bGRuaGVuaGZxaHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTIwOTEsImV4cCI6MjA4NTAyODA5MX0.I9JcTBoZpxT9eTz8dGP_7kXeH0fqu7A_qJ5NK7HknGE";   // anon public key
   const hasSupabase = !!(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase);
 
   const supa = hasSupabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
