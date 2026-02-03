@@ -1,1137 +1,832 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>Pickup Team Balancer</title>
-<style>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pickup Team Balancer</title>
+  <style>
     :root{
-      --bg1:#070a14;
-      --bg2:#0b1020;
-      --card:rgba(18,26,51,.90);
-      --card2:rgba(12,18,38,.85);
-      --text:#e9eeff;
-      --sub:rgba(233,238,255,.72);
-      --muted:#9fb0ff;
+      --bg0:#070b16; --bg1:#0b1020;
+      --card:rgba(18,26,51,.92);
+      --card2:rgba(8,12,25,.55);
       --line:rgba(36,48,90,.65);
       --line2:rgba(36,48,90,.9);
-      --shadow:0 14px 40px rgba(0,0,0,.35);
-      --radius:16px;
-      --radius2:12px;
-      --ok:#21c55d; --warn:#f59e0b; --bad:#ef4444;
+      --text:#e9eeff;
+      --muted:rgba(233,238,255,.72);
+      --muted2:rgba(233,238,255,.55);
       --brand1:#3b82f6; --brand2:#6366f1;
-      --focus:rgba(99,102,241,.45);
+      --ok:#21c55d; --warn:#f59e0b; --bad:#ef4444;
+      --shadow:0 12px 36px rgba(0,0,0,.30);
+      --r:16px;
     }
-
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
       margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:radial-gradient(1200px 800px at 10% -10%, rgba(99,102,241,.25), transparent 55%),
+                 radial-gradient(900px 650px at 110% 0%, rgba(59,130,246,.18), transparent 60%),
+                 linear-gradient(120deg,var(--bg0),var(--bg1));
       color:var(--text);
-      background:
-        radial-gradient(900px 500px at 15% 10%, rgba(99,102,241,.20), transparent 60%),
-        radial-gradient(900px 500px at 85% 0%, rgba(59,130,246,.18), transparent 55%),
-        linear-gradient(120deg,var(--bg1),var(--bg2));
     }
-
-    .wrap{max-width:1120px;margin:0 auto;padding:18px}
-    .top{
-      display:grid;
-      grid-template-columns: 1fr auto;
-      gap:12px;
-      align-items:end;
+    .wrap{max-width:980px;margin:0 auto;padding:14px 14px 86px}
+    .header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-top:6px}
+    .title{font-weight:900;font-size:26px;letter-spacing:.2px}
+    .sub{margin-top:4px;color:var(--muted);font-size:14px}
+    .chipRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(8,12,25,.45);color:rgba(233,238,255,.85);
+      font-size:13px
     }
-    @media(max-width:900px){
-      .top{grid-template-columns:1fr; align-items:start}
-    }
-
-    .title{font-weight:900;font-size:22px;letter-spacing:.2px}
-    .sub{color:var(--sub);font-size:13px;margin-top:6px;line-height:1.35}
-
-    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-top:14px}
-    @media(max-width:980px){.grid{grid-template-columns:1fr}}
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:14px;
-      box-shadow:var(--shadow);
-      backdrop-filter: blur(6px);
-    }
-    h2{margin:0 0 10px 0;font-size:16px;font-weight:850}
-
-    label{display:block;font-size:12px;color:var(--sub);margin-bottom:6px}
-
-    input,select,button,textarea{
-      width:100%;
-      border-radius:var(--radius2);
-      border:1px solid var(--line2);
-      background:rgba(8,12,25,.65);
-      color:var(--text);
-      padding:10px 11px;
-      outline:none;
-      transition: transform .02s ease, border-color .15s ease, box-shadow .15s ease, background .15s ease;
-    }
-    input::placeholder{color:rgba(233,238,255,.45)}
-    input:focus,select:focus,textarea:focus{
-      border-color:rgba(99,102,241,.75);
-      box-shadow:0 0 0 4px var(--focus);
-    }
-
-    button{cursor:pointer;font-weight:800}
-    button:active{transform: translateY(1px)}
-    button.primary{
-      border:none;
-      background:linear-gradient(90deg,var(--brand1),var(--brand2));
-      box-shadow:0 10px 24px rgba(59,130,246,.18);
-    }
-    button.primary:hover{filter:brightness(1.05)}
-    button.ghost{background:transparent}
-    button.ghost:hover{background:rgba(255,255,255,.05)}
-    button.danger{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.40)}
-    button.danger:hover{background:rgba(239,68,68,.20)}
-    button.small{padding:9px 11px;font-size:13px}
-
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
-    .row > *{flex:1;min-width:140px}
-
-    .pill{
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      padding:7px 11px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(8,12,25,.45);
-      font-size:12px;
-      color:rgba(233,238,255,.88)
-    }
-
-    .divider{height:1px;background:var(--line);margin:12px 0}
-    .note{font-size:12px;color:var(--sub);line-height:1.35}
-
-    .list{display:flex;flex-direction:column;gap:8px}
-    .item{
-      display:flex;gap:10px;align-items:flex-start;
-      padding:11px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(8,12,25,.40)
-    }
-
-    .meta{flex:1}
-    .name{font-weight:900}
-    .mini{font-size:12px;color:var(--sub);margin-top:3px}
-    .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
-    .tag{
-      font-size:11px;
-      padding:4px 9px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(18,26,51,.52);
-      color:rgba(233,238,255,.88)
-    }
-
-    .teamGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    @media(max-width:700px){.teamGrid{grid-template-columns:1fr}}
-    .teamCard{
-      border-radius:var(--radius);
+    .chip b{font-weight:800}
+    .linkBtn{
+      border:none;background:transparent;color:rgba(233,238,255,.9);
+      padding:8px 10px;border-radius:10px;cursor:pointer;
       border:1px solid var(--line);
       background:rgba(8,12,25,.40);
-      padding:12px
+      font-weight:800;font-size:13px
     }
-    .teamHeader{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-    .teamTitle{font-weight:950}
-    .score{font-size:12px;color:var(--sub)}
-
-    .playerRow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed rgba(36,48,90,.5)}
-    .playerRow:last-child{border-bottom:none}
-    .right{text-align:right;font-size:12px;color:var(--sub);min-width:92px}
-
-    .kpiRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    .kpi{
-      flex:1;min-width:170px;
-      border-radius:14px;
+    .linkBtn:active{transform:translateY(1px)}
+    .tabs{
+      margin-top:14px;
+      display:flex;gap:10px;
+      padding:10px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(8,12,25,.35);
+      position:sticky;top:0;z-index:10;
+      backdrop-filter: blur(8px);
+    }
+    .tab{
+      flex:1;
+      border:none;cursor:pointer;
+      padding:12px 10px;border-radius:999px;
+      font-weight:900;font-size:15px;
+      color:rgba(233,238,255,.85);
+      background:transparent;
+    }
+    .tab.active{
+      background:linear-gradient(90deg,var(--brand1),var(--brand2));
+      color:white;
+      box-shadow:0 10px 22px rgba(59,130,246,.22);
+    }
+    .card{
+      margin-top:12px;
+      background:var(--card);
       border:1px solid var(--line);
-      background:rgba(18,26,51,.52);
-      padding:11px
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:14px;
     }
-    .k{font-size:12px;color:var(--sub)}
-    .v{font-size:16px;font-weight:950;margin-top:4px}
-
-    .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
-    .inline{display:flex;gap:8px;align-items:center}
-    .inline input[type="checkbox"]{width:auto;transform:translateY(1px)}
-
-    /* subtle alignment improvements */
-    #importFile{display:none}
-
-  
-    /* Mobile-first polish */
-    .item.tappable{cursor:pointer}
-    .stickyBar{
-      position:fixed; left:0; right:0; bottom:0; z-index:50;
-      padding:10px 12px;
-      background:linear-gradient(180deg, rgba(7,10,20,.15), rgba(7,10,20,.92) 30%, rgba(7,10,20,.98));
-      border-top:1px solid var(--line);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 -10px 30px rgba(0,0,0,.35);
+    h2{margin:0 0 10px 0;font-size:18px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:7px}
+    input,select,button,textarea{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--line2);
+      background:rgba(8,12,25,.70);
+      color:var(--text);
+      padding:12px 12px;
+      outline:none;
+      font-size:16px;
+    }
+    input::placeholder{color:var(--muted2)}
+    select{padding-right:38px}
+    button{cursor:pointer;font-weight:900}
+    .primary{border:none;background:linear-gradient(90deg,var(--brand1),var(--brand2));color:white}
+    .ghost{background:rgba(8,12,25,.35)}
+    .danger{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.35)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+    .row > *{flex:1;min-width:140px}
+    .divider{height:1px;background:var(--line);margin:12px 0}
+    .note{font-size:13px;color:var(--muted);line-height:1.35}
+    .error{
+      border:1px solid rgba(239,68,68,.45);
+      background:rgba(239,68,68,.10);
+      border-radius:var(--r);
+      padding:12px;
+      margin-top:12px;
       display:none;
     }
-    .stickyBar .inner{
-      max-width:1100px; margin:0 auto;
-      display:flex; gap:10px; align-items:center;
-    }
-    .stickyMeta{
-      flex:1;
-      display:flex; flex-direction:column; gap:2px;
-      font-size:12px; color:var(--sub);
-      min-width:120px;
-    }
-    .stickyMeta strong{color:var(--text); font-size:13px}
-    .stickyBtns{display:flex; gap:10px; flex:1.2}
-    .stickyBtns button{flex:1; padding:12px 12px; font-size:14px; border-radius:12px}
-    .stickyMore{display:flex; gap:10px}
-    .stickyMore button{width:auto; padding:12px 12px; border-radius:12px}
-
-    @media (max-width:700px){
-      .wrap{padding:12px}
-      .top{gap:10px}
-      .title{font-size:20px}
-      .sub{font-size:12px}
-      .grid{gap:12px}
-      .card{padding:12px}
-      h2{font-size:15px}
-      input,select,button,textarea{padding:10px}
-      .row{gap:8px}
-      .row > *{min-width:130px}
-      .tags{gap:6px}
-      .tag{padding:4px 8px}
-      .playerRow{padding:7px 0}
-      .right{min-width:92px}
-      /* Make checkbox easier but keep row tap */
-      .inline input[type="checkbox"]{transform:scale(1.15)}
-      /* Reserve space for sticky bar */
-      body{padding-bottom:88px}
-      .stickyBar{display:block}
-      /* Keep the original button row but slightly less prominent */
-      #genBtn,#regenBtn,#clearLocksBtn{padding:10px 12px}
-    }
-
-  
-
-    /* --- Mobile-first nav + compact Cloud section --- */
-    html{font-size:16px}
-    .title{font-size:22px;line-height:1.15}
-    .sub{font-size:14px;margin-top:6px}
-    label{font-size:13px}
-
-    .navTabs{
-      display:flex;gap:10px;align-items:center;
-      margin:10px 0 12px 0;
-      overflow-x:auto;-webkit-overflow-scrolling:touch;
-      padding-bottom:2px;
-    }
-    .navTab{
-      flex:0 0 auto;
-      text-decoration:none;
-      color:rgba(233,238,255,.92);
-      border:1px solid rgba(36,48,90,.65);
-      background:rgba(8,12,25,.45);
-      padding:8px 12px;
-      border-radius:999px;
-      font-weight:900;
-      font-size:13px;
-      line-height:1;
-      white-space:nowrap;
-    }
-    .navTab:active{transform:scale(.98)}
-    .navTab:focus{outline:2px solid rgba(99,102,241,.55);outline-offset:2px}
-
-    .cloudCard{padding:10px}
-    .cloudDetails summary{
+    .error b{font-weight:900}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .playerCard{
+      display:flex;gap:12px;align-items:flex-start;
+      border-radius:14px;border:1px solid var(--line);
+      background:rgba(8,12,25,.38);
+      padding:12px;
       cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      list-style:none;
+      -webkit-tap-highlight-color: transparent;
     }
-    .cloudDetails summary::-webkit-details-marker{display:none}
-    .cloudTitle{font-weight:900;font-size:15px}
-    .pillInline{padding:6px 10px;font-size:12px}
-    .smallNote{font-size:13px}
-    .cloudRow > *{min-width:160px}
-
-    /* Make section jumps feel nice */
-    #cloudSection, #playersSection, #teamsSection, #resultsSection{scroll-margin-top:70px}
-
-    @media(max-width:700px){
-      .wrap{padding:12px}
-      .cloudActions button{width:100%}
-      .cloudActions{gap:8px}
-      .navTab{padding:9px 12px;font-size:14px}
-      .title{font-size:24px}
-      h2{font-size:18px}
-    }
-
-
-/* v8 flow screens + compact header */
-.headerRight{display:flex;gap:10px;align-items:center}
-#changeGroupBtn{display:none;width:auto}
-.stepNav{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.stepBtn{width:auto;flex:1;min-width:100px;border-radius:999px;padding:10px 12px;font-weight:800;opacity:.9}
-.stepBtn.active{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.55)}
-.screens{margin-top:12px}
-.screen{display:none;min-height:calc(100vh - 210px)}
-.screen.active{display:block}
-.manageDetails{margin-top:12px;border:1px solid rgba(36,48,90,.65);border-radius:14px;background:rgba(8,12,25,.35);padding:10px}
-.manageDetails > summary{cursor:pointer;font-weight:900;list-style:none}
-.manageDetails > summary::-webkit-details-marker{display:none}
-.manageDetails > summary:after{content:"›";float:right;opacity:.7;transform:rotate(90deg)}
-.manageDetails[open] > summary:after{transform:rotate(-90deg)}
-/* Make the old Player Database section title compact inside details */
-.manageDetails .sectionTitle{margin-top:10px}
-/* Mobile: tighter header height */
-@media(max-width:700px){
-  .top{align-items:flex-start}
-  .title{font-size:18px}
-  .sub{font-size:12px}
-  .screen{min-height:calc(100vh - 220px)}
-}
-</style>
-<style>
-
-    :root{
-      --bg1:#070a14;
-      --bg2:#0b1020;
-      --card:rgba(18,26,51,.90);
-      --card2:rgba(12,18,38,.85);
-      --text:#e9eeff;
-      --sub:rgba(233,238,255,.72);
-      --muted:#9fb0ff;
-      --line:rgba(36,48,90,.65);
-      --line2:rgba(36,48,90,.9);
-      --shadow:0 14px 40px rgba(0,0,0,.35);
-      --radius:16px;
-      --radius2:12px;
-      --ok:#21c55d; --warn:#f59e0b; --bad:#ef4444;
-      --brand1:#3b82f6; --brand2:#6366f1;
-      --focus:rgba(99,102,241,.45);
-    }
-
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      color:var(--text);
-      background:
-        radial-gradient(900px 500px at 15% 10%, rgba(99,102,241,.20), transparent 60%),
-        radial-gradient(900px 500px at 85% 0%, rgba(59,130,246,.18), transparent 55%),
-        linear-gradient(120deg,var(--bg1),var(--bg2));
-    }
-
-    .wrap{max-width:1120px;margin:0 auto;padding:18px}
-    .top{
-      display:grid;
-      grid-template-columns: 1fr auto;
-      gap:12px;
-      align-items:end;
-    }
-    @media(max-width:900px){
-      .top{grid-template-columns:1fr; align-items:start}
-    }
-
-    .title{font-weight:900;font-size:22px;letter-spacing:.2px}
-    .sub{color:var(--sub);font-size:13px;margin-top:6px;line-height:1.35}
-
-    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-top:14px}
-    @media(max-width:980px){.grid{grid-template-columns:1fr}}
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:14px;
-      box-shadow:var(--shadow);
-      backdrop-filter: blur(6px);
-    }
-    h2{margin:0 0 10px 0;font-size:16px;font-weight:850}
-
-    label{display:block;font-size:12px;color:var(--sub);margin-bottom:6px}
-
-    input,select,button,textarea{
-      width:100%;
-      border-radius:var(--radius2);
+    .playerCard:active{transform:translateY(1px)}
+    .cb{
+      width:22px;height:22px;border-radius:7px;
       border:1px solid var(--line2);
       background:rgba(8,12,25,.65);
-      color:var(--text);
-      padding:10px 11px;
-      outline:none;
-      transition: transform .02s ease, border-color .15s ease, box-shadow .15s ease, background .15s ease;
+      display:inline-flex;align-items:center;justify-content:center;
+      flex:0 0 auto;margin-top:2px;
     }
-    input::placeholder{color:rgba(233,238,255,.45)}
-    input:focus,select:focus,textarea:focus{
-      border-color:rgba(99,102,241,.75);
-      box-shadow:0 0 0 4px var(--focus);
-    }
-
-    button{cursor:pointer;font-weight:800}
-    button:active{transform: translateY(1px)}
-    button.primary{
-      border:none;
-      background:linear-gradient(90deg,var(--brand1),var(--brand2));
-      box-shadow:0 10px 24px rgba(59,130,246,.18);
-    }
-    button.primary:hover{filter:brightness(1.05)}
-    button.ghost{background:transparent}
-    button.ghost:hover{background:rgba(255,255,255,.05)}
-    button.danger{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.40)}
-    button.danger:hover{background:rgba(239,68,68,.20)}
-    button.small{padding:9px 11px;font-size:13px}
-
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
-    .row > *{flex:1;min-width:140px}
-
-    .pill{
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      padding:7px 11px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(8,12,25,.45);
-      font-size:12px;
-      color:rgba(233,238,255,.88)
-    }
-
-    .divider{height:1px;background:var(--line);margin:12px 0}
-    .note{font-size:12px;color:var(--sub);line-height:1.35}
-
-    .list{display:flex;flex-direction:column;gap:8px}
-    .item{
-      display:flex;gap:10px;align-items:flex-start;
-      padding:11px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(8,12,25,.40)
-    }
-
+    .cb.on{background:linear-gradient(90deg,var(--brand1),var(--brand2));border:none}
+    .cb svg{width:14px;height:14px;display:none}
+    .cb.on svg{display:block}
     .meta{flex:1}
-    .name{font-weight:900}
-    .mini{font-size:12px;color:var(--sub);margin-top:3px}
-    .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+    .name{font-weight:900;font-size:16px}
+    .mini{margin-top:3px;font-size:13px;color:rgba(233,238,255,.8)}
+    .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
     .tag{
-      font-size:11px;
-      padding:4px 9px;
-      border-radius:999px;
+      font-size:12px;padding:5px 10px;border-radius:999px;
       border:1px solid var(--line);
-      background:rgba(18,26,51,.52);
+      background:rgba(18,26,51,.55);
       color:rgba(233,238,255,.88)
     }
-
-    .teamGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    @media(max-width:700px){.teamGrid{grid-template-columns:1fr}}
-    .teamCard{
-      border-radius:var(--radius);
-      border:1px solid var(--line);
-      background:rgba(8,12,25,.40);
-      padding:12px
-    }
-    .teamHeader{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-    .teamTitle{font-weight:950}
-    .score{font-size:12px;color:var(--sub)}
-
-    .playerRow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed rgba(36,48,90,.5)}
-    .playerRow:last-child{border-bottom:none}
-    .right{text-align:right;font-size:12px;color:var(--sub);min-width:92px}
-
+    .btnRow{display:flex;gap:10px;flex-wrap:wrap}
+    .btnRow > button{flex:1;min-width:160px}
+    .rightBtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .rightBtns button{width:auto;min-width:140px}
     .kpiRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    .kpi{
-      flex:1;min-width:170px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(18,26,51,.52);
-      padding:11px
-    }
-    .k{font-size:12px;color:var(--sub)}
-    .v{font-size:16px;font-weight:950;margin-top:4px}
-
+    .kpi{flex:1;min-width:180px;border-radius:14px;border:1px solid var(--line);background:rgba(18,26,51,.55);padding:12px}
+    .k{font-size:13px;color:var(--muted)}
+    .v{font-size:18px;font-weight:900;margin-top:6px}
     .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
-    .inline{display:flex;gap:8px;align-items:center}
-    .inline input[type="checkbox"]{width:auto;transform:translateY(1px)}
-
-    /* subtle alignment improvements */
-    #importFile{display:none}
-
-  
-    /* Mobile-first polish */
-    .item.tappable{cursor:pointer}
+    .teamGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}
+    @media(max-width:760px){ .teamGrid{grid-template-columns:1fr} }
+    .teamCard{border-radius:14px;border:1px solid var(--line);background:rgba(8,12,25,.42);padding:12px}
+    .teamHeader{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+    .teamTitle{font-weight:950}
+    .score{font-size:13px;color:rgba(233,238,255,.8);text-align:right}
+    .playerRow{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed rgba(36,48,90,.55)}
+    .playerRow:last-child{border-bottom:none}
     .stickyBar{
-      position:fixed; left:0; right:0; bottom:0; z-index:50;
+      position:fixed;left:0;right:0;bottom:0;z-index:20;
       padding:10px 12px;
-      background:linear-gradient(180deg, rgba(7,10,20,.15), rgba(7,10,20,.92) 30%, rgba(7,10,20,.98));
-      border-top:1px solid var(--line);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 -10px 30px rgba(0,0,0,.35);
-      display:none;
+      background:linear-gradient(180deg, rgba(7,11,22,0.0), rgba(7,11,22,.85) 22%, rgba(7,11,22,.92));
+      backdrop-filter: blur(8px);
     }
-    .stickyBar .inner{
-      max-width:1100px; margin:0 auto;
-      display:flex; gap:10px; align-items:center;
+    .stickyInner{
+      max-width:980px;margin:0 auto;
+      display:flex;gap:10px;align-items:center;
     }
-    .stickyMeta{
-      flex:1;
-      display:flex; flex-direction:column; gap:2px;
-      font-size:12px; color:var(--sub);
-      min-width:120px;
+    .stickyInner .leftNote{flex:1;color:rgba(233,238,255,.75);font-size:13px}
+    .stickyInner button{width:auto;min-width:140px}
+    @media(max-width:500px){
+      .title{font-size:24px}
+      .tab{font-size:14px;padding:11px 8px}
+      input,select,button{font-size:16px}
+      .stickyInner button{min-width:0;flex:1}
     }
-    .stickyMeta strong{color:var(--text); font-size:13px}
-    .stickyBtns{display:flex; gap:10px; flex:1.2}
-    .stickyBtns button{flex:1; padding:12px 12px; font-size:14px; border-radius:12px}
-    .stickyMore{display:flex; gap:10px}
-    .stickyMore button{width:auto; padding:12px 12px; border-radius:12px}
-
-    @media (max-width:700px){
-      .wrap{padding:12px}
-      .top{gap:10px}
-      .title{font-size:20px}
-      .sub{font-size:12px}
-      .grid{gap:12px}
-      .card{padding:12px}
-      h2{font-size:15px}
-      input,select,button,textarea{padding:10px}
-      .row{gap:8px}
-      .row > *{min-width:130px}
-      .tags{gap:6px}
-      .tag{padding:4px 8px}
-      .playerRow{padding:7px 0}
-      .right{min-width:92px}
-      /* Make checkbox easier but keep row tap */
-      .inline input[type="checkbox"]{transform:scale(1.15)}
-      /* Reserve space for sticky bar */
-      body{padding-bottom:88px}
-      .stickyBar{display:block}
-      /* Keep the original button row but slightly less prominent */
-      #genBtn,#regenBtn,#clearLocksBtn{padding:10px 12px}
-    }
-
   </style>
 </head>
 <body>
-<div class="wrap"><div class="top"><div><div class="title">Pickup Team Balancer</div><div class="sub">Join group → Pick players → Generate teams. Designed for phone use.</div></div><div class="headerRight"><span class="pill" id="activeGroupPill">No group</span><button class="small ghost" id="changeGroupBtn">Change group</button></div></div><div class="card" id="errorBox" style="display:none;border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.08);margin-top:12px"><div style="font-weight:800">Action needed</div><div class="note" id="errorText" style="margin-top:6px"></div></div><div class="stepNav"><button class="stepBtn ghost" id="stepCloud">1. Cloud</button><button class="stepBtn ghost" id="stepToday">2. Today</button><button class="stepBtn ghost" id="stepTeams">3. Teams</button></div><div class="screens"><section class="screen active" id="screenCloud"><div class="card"><h2>Cloud</h2><div class="note">Enter a group code to use the shared roster. Example: SATURDAYRUN. You can also open an invite link that auto-fills this.</div><div class="row"><div style="flex:1.4;min-width:220px"><label>Group code</label><input id="groupCode" placeholder="e.g., SATURDAYRUN"/></div><div style="min-width:160px"><label> </label><button class="primary" id="joinGroupBtn">Join / Create</button></div></div><div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><span class="pill" id="cloudStatus">Not connected</span><button class="small ghost" id="copyInviteBtn">Copy Invite Link</button></div></div></section><section class="screen" id="screenToday"><div class="card"><h2>Who is playing today?</h2><div class="note">Tap players to select. You can add/edit roster below if needed.</div><div class="row"><div class="pill"><span>Selected: </span><strong id="selCount">0</strong></div><div class="pill"><span>Needed: </span><strong id="needCount">0</strong></div></div><div class="row"><button class="small ghost" id="selectAllBtn">Select all</button><button class="small ghost" id="selectNoneBtn">Select none</button></div><div class="list" id="playerList"></div><div class="row"><button class="primary" id="toTeamsBtn">Continue →</button></div><div class="divider"></div><details class="manageDetails" id="manageRoster"><summary>Manage roster (add/edit players)</summary></details></div></section><section class="screen" id="screenTeams"><div class="card"><h2>Generate teams</h2><div class="note">Choose format, then generate. Re-roll to try another balanced split.</div><div class="" id="results"></div></div></section></div><div aria-label="Quick actions" class="stickyBar" id="stickyBar">
-<div class="inner">
-<div class="stickyMeta">
-<div>Selected: <strong id="stickySel">0</strong> · Needed: <strong id="stickyNeed">0</strong></div>
-<div style="opacity:.85">Quick actions</div>
-</div>
-<div class="stickyBtns">
-<button class="primary" id="stickyGen">Generate</button>
-<button class="ghost" id="stickyRegen">Re-roll</button>
-</div>
-<div class="stickyMore">
-<button class="ghost" id="stickyClear" title="Clear Locks">Clear</button>
-</div>
-</div>
-</div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <div class="title">Pickup Team Balancer</div>
+        <div class="sub">Join a group → pick who’s playing → generate teams. Built for phone use.</div>
+      </div>
+      <div class="chipRow">
+        <div class="chip" id="groupChip"><span style="opacity:.85">Group:</span> <b id="groupName">None</b></div>
+        <button id="changeGroupBtn" class="linkBtn" style="display:none">Change group</button>
+      </div>
+    </div>
+
+    <div id="errorBox" class="error"><b>Action needed:</b> <span id="errorText"></span></div>
+
+    <div class="tabs" role="tablist" aria-label="Navigation">
+      <button class="tab active" id="tabGroup" data-tab="group">Group</button>
+      <button class="tab" id="tabPlayers" data-tab="players">Players</button>
+      <button class="tab" id="tabTeams" data-tab="teams">Teams</button>
+    </div>
+
+    <!-- GROUP -->
+    <section id="screen-group" class="card">
+      <h2>Group</h2>
+      <div class="note">Enter a group code to use the shared roster. Example: <b>SATURDAYRUN</b>. Invite links can auto-fill the code.</div>
+      <div class="divider"></div>
+
+      <div class="row">
+        <div style="flex:2">
+          <label>Group code</label>
+          <input id="groupCodeInput" placeholder="e.g., SATURDAYRUN" autocomplete="off" />
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <label style="opacity:.9">Cloud</label>
+          <button id="joinBtn" class="primary">Join / Create</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;align-items:center">
+        <div class="chip" style="flex:1"><span style="opacity:.8">Status:</span> <b id="statusText">Not connected</b></div>
+        <button id="copyInviteBtn" class="ghost" style="width:auto;min-width:180px">Copy invite link</button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="note">Tip: After you connect once, this device will remember the group and take you straight to Teams next time.</div>
+    </section>
+
+    <!-- PLAYERS -->
+    <section id="screen-players" class="card" style="display:none">
+      <h2>Players</h2>
+      <div class="note">Add or edit players in the shared roster.</div>
+      <div class="divider"></div>
+
+      <div class="row">
+        <div style="flex:1.4">
+          <label>Name</label>
+          <input id="pName" placeholder="e.g., Nish" />
+        </div>
+        <div>
+          <label>Offense (1–10)</label>
+          <select id="pOff"></select>
+        </div>
+        <div>
+          <label>Defense (1–10)</label>
+          <select id="pDef"></select>
+        </div>
+        <div>
+          <label>Rebounding (1–10)</label>
+          <select id="pReb"></select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div style="flex:2">
+          <label>Notes (optional)</label>
+          <input id="pNotes" placeholder="e.g., Big / Shooter / Quick guard" />
+        </div>
+        <div class="rightBtns">
+          <button id="savePlayerBtn" class="primary">Add player</button>
+          <button id="cancelEditBtn" class="ghost" style="display:none">Cancel</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="note" id="playersHint">Connect to a group to load players.</div>
+      <div id="playerList" class="list" style="margin-top:10px"></div>
+    </section>
+
+    <!-- TEAMS -->
+    <section id="screen-teams" class="card" style="display:none">
+      <h2>Teams</h2>
+      <div class="note">Pick who’s playing today, then generate teams.</div>
+      <div class="divider"></div>
+
+      <div class="chipRow">
+        <div class="chip"><span style="opacity:.8">Selected:</span> <b id="selCount">0</b></div>
+        <div class="chip"><span style="opacity:.8">Needed:</span> <b id="needCount">10</b></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <h3 style="margin:0 0 8px 0;font-size:16px">Who’s playing today?</h3>
+      <div class="note">Tap players to select them. Then continue to generation.</div>
+      <div id="todayList" class="list" style="margin-top:10px"></div>
+
+      <div class="btnRow" style="margin-top:12px">
+        <button id="continueBtn" class="primary">Continue</button>
+        <button id="selectAllBtn" class="ghost">Select all</button>
+      </div>
+
+      <div id="genCard" style="display:none;margin-top:12px">
+        <div class="divider"></div>
+        <h3 style="margin:0 0 8px 0;font-size:16px">Generate teams</h3>
+
+        <div class="row">
+          <div>
+            <label>Game format</label>
+            <select id="gameSize">
+              <option value="3">3v3</option>
+              <option value="4">4v4</option>
+              <option value="5" selected>5v5</option>
+            </select>
+          </div>
+          <div>
+            <label># of teams</label>
+            <select id="numTeams">
+              <option value="2" selected>2 teams</option>
+              <option value="3">3 teams (rotate)</option>
+              <option value="4">4 teams (rotate)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btnRow" style="margin-top:10px">
+          <button id="genBtn" class="primary">Generate teams</button>
+          <button id="rerollBtn" class="ghost">Re-roll</button>
+          <button id="clearSelBtn" class="ghost">Clear selection</button>
+        </div>
+
+        <div id="results" style="margin-top:12px"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="stickyBar">
+    <div class="stickyInner">
+      <div class="leftNote" id="stickyNote">Connect to a group to begin.</div>
+      <button id="stickyAction" class="primary">Go to Group</button>
+    </div>
+  </div>
+
+  <!-- Supabase client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-(async () => {
-  // Optional cloud sync via Supabase.
-  // To enable: paste your values from Supabase Settings → API.
+(() => {
+  // =========================
+  //  SUPABASE CONFIG (PASTE)
+  // =========================
   const SUPABASE_URL = "https://qkfgnsytldnhenhfqhvr.supabase.co";        // e.g., "https://xxxx.supabase.co"
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZmduc3l0bGRuaGVuaGZxaHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTIwOTEsImV4cCI6MjA4NTAyODA5MX0.I9JcTBoZpxT9eTz8dGP_7kXeH0fqu7A_qJ5NK7HknGE";   // anon public key
-  const supabaseConfigured = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
-  const supabase = (supabaseConfigured && window.supabase)
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-    : null;
+  const hasSupabase = !!(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase);
 
+  const supa = hasSupabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-  const STORAGE_KEY_PLAYERS = "pickup_team_balancer_v2_players_vanilla";
-  const STORAGE_KEY_SETTINGS = "pickup_team_balancer_v2_settings";
-  const STORAGE_KEY_SESSION  = "pickup_team_balancer_v2_session";
-
-  const defaults = {
-    weights: { offense: 40, defense: 40, rebounding: 20, hustle: 0 }, // %; will be normalized
-    advanced: false,
-    captain: false,
-    stability: false,
-    weightPreset: "default"
-  };
-
-  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
-  const uid = () => Math.random().toString(36).slice(2,10) + "-" + Date.now().toString(36);
+  // =========================
+  //  APP STATE
+  // =========================
+  const LS_GROUP = "pickup_balancer_group_code_v10";
+  const LS_GROUP_ID = "pickup_balancer_group_id_v10";
 
   const els = {
     errorBox: document.getElementById("errorBox"),
     errorText: document.getElementById("errorText"),
 
-    // flow / header
-    activeGroupPill: document.getElementById("activeGroupPill"),
+    groupName: document.getElementById("groupName"),
     changeGroupBtn: document.getElementById("changeGroupBtn"),
-    stepCloud: document.getElementById("stepCloud"),
-    stepToday: document.getElementById("stepToday"),
-    stepTeams: document.getElementById("stepTeams"),
-    screenCloud: document.getElementById("screenCloud"),
-    screenToday: document.getElementById("screenToday"),
-    screenTeams: document.getElementById("screenTeams"),
 
-    // cloud
-    groupCode: document.getElementById("groupCode"),
-    joinGroupBtn: document.getElementById("joinGroupBtn"),
-    cloudStatus: document.getElementById("cloudStatus"),
+    tabGroup: document.getElementById("tabGroup"),
+    tabPlayers: document.getElementById("tabPlayers"),
+    tabTeams: document.getElementById("tabTeams"),
+    tabs: Array.from(document.querySelectorAll(".tab")),
+
+    screenGroup: document.getElementById("screen-group"),
+    screenPlayers: document.getElementById("screen-players"),
+    screenTeams: document.getElementById("screen-teams"),
+
+    groupCodeInput: document.getElementById("groupCodeInput"),
+    joinBtn: document.getElementById("joinBtn"),
     copyInviteBtn: document.getElementById("copyInviteBtn"),
+    statusText: document.getElementById("statusText"),
 
-    // today
+    // Players
+    pName: document.getElementById("pName"),
+    pOff: document.getElementById("pOff"),
+    pDef: document.getElementById("pDef"),
+    pReb: document.getElementById("pReb"),
+    pNotes: document.getElementById("pNotes"),
+    savePlayerBtn: document.getElementById("savePlayerBtn"),
+    cancelEditBtn: document.getElementById("cancelEditBtn"),
     playerList: document.getElementById("playerList"),
+    playersHint: document.getElementById("playersHint"),
+
+    // Teams
     selCount: document.getElementById("selCount"),
     needCount: document.getElementById("needCount"),
+    todayList: document.getElementById("todayList"),
+    continueBtn: document.getElementById("continueBtn"),
     selectAllBtn: document.getElementById("selectAllBtn"),
-    selectNoneBtn: document.getElementById("selectNoneBtn"),
-    toTeamsBtn: document.getElementById("toTeamsBtn"),
 
-    // roster management (inside details)
-    weightsText: document.getElementById("weightsText"),
-    pName: document.getElementById("pName"),
-    pPreset: document.getElementById("pPreset"),
-    pNotes: document.getElementById("pNotes"),
-    pPos: document.getElementById("pPos"),
-    saveBtn: document.getElementById("saveBtn"),
-    cancelBtn: document.getElementById("cancelBtn"),
-    offBtns: document.getElementById("offBtns"),
-    defBtns: document.getElementById("defBtns"),
-    rebBtns: document.getElementById("rebBtns"),
-    hustleWrap: document.getElementById("hustleWrap"),
-    hustleBtns: document.getElementById("hustleBtns"),
-    posWrap: document.getElementById("posWrap"),
-    advancedToggle: document.getElementById("advancedToggle"),
-
-    // teams
+    genCard: document.getElementById("genCard"),
     gameSize: document.getElementById("gameSize"),
     numTeams: document.getElementById("numTeams"),
     genBtn: document.getElementById("genBtn"),
-    regenBtn: document.getElementById("regenBtn"),
-    clearLocksBtn: document.getElementById("clearLocksBtn"),
+    rerollBtn: document.getElementById("rerollBtn"),
+    clearSelBtn: document.getElementById("clearSelBtn"),
     results: document.getElementById("results"),
 
-    // weights
-    presetWeights: document.getElementById("presetWeights"),
-    wOff: document.getElementById("wOff"),
-    wDef: document.getElementById("wDef"),
-    wReb: document.getElementById("wReb"),
-    wOffLabel: document.getElementById("wOffLabel"),
-    wDefLabel: document.getElementById("wDefLabel"),
-    wRebLabel: document.getElementById("wRebLabel"),
-
-    // sticky
-    stickyBar: document.getElementById("stickyBar"),
-    stickyGenerate: document.getElementById("stickyGenerate"),
-    stickyReroll: document.getElementById("stickyReroll"),
-    stickyClear: document.getElementById("stickyClear")
+    // Sticky
+    stickyNote: document.getElementById("stickyNote"),
+    stickyAction: document.getElementById("stickyAction"),
   };
 
+  // build 1-10 select options
+  const fill10 = (sel, def=6) => {
+    sel.innerHTML = "";
+    for (let i=1;i<=10;i++){
+      const o = document.createElement("option");
+      o.value = String(i);
+      o.textContent = String(i);
+      if (i === def) o.selected = true;
+      sel.appendChild(o);
+    }
+  };
+  fill10(els.pOff, 6); fill10(els.pDef, 6); fill10(els.pReb, 6);
+
+  const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
   const setError = (msg) => {
-    if (!msg) { els.errorBox.style.display = "none"; els.errorText.textContent = ""; return; }
-    els.errorBox.style.display = "block";
-    els.errorText.textContent = msg;
+    if (!msg) { els.errorBox.style.display="none"; els.errorText.textContent=""; return; }
+    els.errorBox.style.display="block"; els.errorText.textContent=msg;
   };
 
-  const loadJSON = (key, fallback) => {
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return fallback;
-      return JSON.parse(raw);
-    } catch { return fallback; }
-  };
-  const saveJSON = (key, val) => localStorage.setItem(key, JSON.stringify(val));
+  const uid = () => Math.random().toString(36).slice(2,10) + "-" + Date.now().toString(36);
 
-  const normalizeWeights = (w) => {
-    const o = clamp(Number(w.offense ?? 0), 0, 100);
-    const d = clamp(Number(w.defense ?? 0), 0, 100);
-    const r = clamp(Number(w.rebounding ?? 0), 0, 100);
-    const h = clamp(Number(w.hustle ?? 0), 0, 100);
-    const sum = o + d + r + h;
-    if (sum <= 0) return { offense: 40, defense: 40, rebounding: 20, hustle: 0 };
-    // normalize to 100
-    return {
-      offense: (o / sum) * 100,
-      defense: (d / sum) * 100,
-      rebounding: (r / sum) * 100,
-      hustle: (h / sum) * 100
-    };
-  };
+  // Balancing weights (simple default)
+  const W = { offense:0.4, defense:0.4, rebounding:0.2 };
+  const overall = (p)=> (p.offense*W.offense)+(p.defense*W.defense)+(p.rebounding*W.rebounding);
 
-  let settings = (async () => {
-    const s = loadJSON(STORAGE_KEY_SETTINGS, defaults);
-    return { ...defaults, ...s, weights: normalizeWeights(s.weights || defaults.weights) };
-  })();
-
-  let session = (() => {
-    const s = loadJSON(STORAGE_KEY_SESSION, { selectedIds: null });
-    return s || { selectedIds: null };
-  })();
-
-  let state = {
-    players: [],
-    groupId: null,
-    groupCode: "",
-    selected: new Set(),
-    locks: {},        // playerId -> teamIndex
-    editId: null,
-    lastResult: null, // {teams, objective, needed, rosterIds, deltas, ...}
-
-};
-
-  // ---------- Flow helpers ----------
-  const setActiveStep = (step) => {
-    const map = { cloud: [els.stepCloud, els.screenCloud], today: [els.stepToday, els.screenToday], teams: [els.stepTeams, els.screenTeams] };
-    for (const k of Object.keys(map)) {
-      const [btn, screen] = map[k];
-      if (btn) btn.classList.toggle("active", k === step);
-      if (screen) screen.classList.toggle("active", k === step);
+  const teamTotals = (team) => {
+    const t = { offense:0, defense:0, rebounding:0, overall:0 };
+    for (const p of team){
+      t.offense += p.offense; t.defense += p.defense; t.rebounding += p.rebounding;
+      t.overall += overall(p);
     }
-    // Sticky bar only on Teams screen
-    if (els.stickyBar) els.stickyBar.style.display = (step === "teams") ? "flex" : "none";
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    return t;
   };
-
-  const updateHeader = () => {
-    const inGroup = !!state.groupId;
-    if (els.activeGroupPill) els.activeGroupPill.textContent = inGroup ? `Group: ${state.groupCode}` : "No group";
-    if (els.changeGroupBtn) els.changeGroupBtn.style.display = inGroup ? "inline-flex" : "none";
+  const spread = (arr)=>Math.max(...arr)-Math.min(...arr);
+  const objective = (teams) => {
+    const totals = teams.map(teamTotals);
+    return (spread(totals.map(t=>t.overall))*2.2)
+         + (spread(totals.map(t=>t.offense))*0.9)
+         + (spread(totals.map(t=>t.defense))*0.9)
+         + (spread(totals.map(t=>t.rebounding))*0.6);
   };
-
-  const todayStorageKey = () => state.groupCode ? `pickup_team_balancer_today_${state.groupCode}` : "pickup_team_balancer_today";
-  const loadSelectedToday = () => {
-    const arr = loadJSON(todayStorageKey(), []);
-    const existing = new Set(state.players.map(p=>p.id));
-    const filtered = Array.isArray(arr) ? arr.filter(id => existing.has(id)) : [];
-    return new Set(filtered);
-  };
-  const saveSelectedToday = () => {
-    if (!state.groupCode) return;
-    saveJSON(todayStorageKey(), Array.from(state.selected));
-  };
-
-  const updateTodayCTA = () => {
-    refreshNeedCounts();
-    const needed = totalNeeded();
-    const ok = state.selected.size >= needed && !!state.groupId;
-    if (els.toTeamsBtn) {
-      els.toTeamsBtn.disabled = !ok;
-      els.toTeamsBtn.textContent = ok ? "Continue →" : `Select ${needed} players to continue`;
-    }
-  };
-
-
-// Init players from local or cloud (if previously joined)
-state.groupId = cloudCfg.groupId || null;
-state.groupCode = cloudCfg.groupCode || "";
-if (els.groupCode) els.groupCode.value = state.groupCode;
-
-if (!supabaseConfigured) {
-  setCloudStatus("Local only", "");
-} else {
-  setCloudStatus(state.groupId ? `Cloud: ${state.groupCode}` : "Cloud ready", "ok");
-}
-
-
-state.players = await storageLoadPlayers();
-
-// Subscribe to cloud changes
-if (state.groupId && supabase) {
-  subscribePlayersCloud(state.groupId, async () => {
-    state.players = await storageLoadPlayers();
-    // keep current selection where possible
-    const existing = new Set(state.players.map(p=>p.id));
-    state.selected = new Set(Array.from(state.selected).filter(id => existing.has(id)));
-    if (state.selected.size === 0) state.players.forEach(p=>state.selected.add(p.id));
-    renderPlayers();
-    renderResults();
-  });
-}
-
-// Seed sample data (local mode only)
-  if (!state.groupId && state.players.length === 0) {
-    state.players = [
-      { id: uid(), name: "Aman", offense: 7, defense: 6, rebounding: 6, hustle: 6, pos:"G", notes: "Quick guard" },
-      { id: uid(), name: "Chris", offense: 6, defense: 8, rebounding: 6, hustle: 7, pos:"W", notes: "Lockdown D" },
-      { id: uid(), name: "Dev", offense: 8, defense: 5, rebounding: 6, hustle: 6, pos:"G", notes: "Shot creator" },
-      { id: uid(), name: "Eli", offense: 5, defense: 7, rebounding: 7, hustle: 7, pos:"W", notes: "Glue guy" },
-      { id: uid(), name: "Farhan", offense: 6, defense: 6, rebounding: 8, hustle: 7, pos:"G", notes: "Primary ball handler" },
-    ];
-    savePlayersLocal(state.players);
-  }
-
-  // Restore selection from session if possible; otherwise select all
-  const restoreSelection = () => {
-    if (Array.isArray(session.selectedIds) && session.selectedIds.length) {
-      const ids = new Set(state.players.map(p => p.id));
-      const keep = session.selectedIds.filter(id => ids.has(id));
-      if (keep.length) {
-        state.selected = new Set(keep);
-        return;
-      }
-    }
-    state.selected = new Set(state.players.map(p => p.id));
-  };
-  restoreSelection();
-
-  const selectedIdsInPlayerOrder = () => state.players.filter(p => state.selected.has(p.id)).map(p => p.id);
-
-
-  const persistSelection = () => {
-    session.selectedIds = Array.from(state.selected);
-    saveJSON(STORAGE_KEY_SESSION, session);
+  const fairnessLabel = (obj)=>{
+    if (obj<=2.5) return {text:"Excellent", cls:"ok"};
+    if (obj<=5.5) return {text:"Good", cls:"ok"};
+    if (obj<=9) return {text:"Okay", cls:"warn"};
+    return {text:"Imbalanced", cls:"bad"};
   };
 
   const totalNeeded = () => Number(els.gameSize.value) * Number(els.numTeams.value);
 
-  const overall = (p) => {
-    const w = settings.weights; // already normalized to 100
-    const base = (p.offense*(w.offense/100))
-               + (p.defense*(w.defense/100))
-               + (p.rebounding*(w.rebounding/100));
-    const hus = (settings.advanced && (p.hustle !== undefined))
-      ? (p.hustle*(w.hustle/100))
-      : 0;
-    return base + hus;
+  let state = {
+    groupCode: "",
+    groupId: "",
+    players: [],
+    selectedToday: new Set(),
+    editId: null,
+    lastResult: null,
+    realtimeSub: null,
   };
 
-  const teamTotals = (team) => {
-    const t = { offense:0, defense:0, rebounding:0, hustle:0, overall:0, g:0, w:0, b:0 };
-    for (const p of team) {
-      t.offense += p.offense;
-      t.defense += p.defense;
-      t.rebounding += p.rebounding;
-      t.hustle += (p.hustle ?? 0);
-      t.overall += overall(p);
-      if (p.pos === "G") t.g += 1;
-      if (p.pos === "W") t.w += 1;
-      if (p.pos === "B") t.b += 1;
+  // =========================
+  //  NAV / SCREENS
+  // =========================
+  const showTab = (tabName) => {
+    els.tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === tabName));
+    els.screenGroup.style.display = tabName === "group" ? "block" : "none";
+    els.screenPlayers.style.display = tabName === "players" ? "block" : "none";
+    els.screenTeams.style.display = tabName === "teams" ? "block" : "none";
+
+    // sticky action
+    if (!state.groupId) {
+      els.stickyNote.textContent = "Connect to a group to begin.";
+      els.stickyAction.textContent = "Go to Group";
+      els.stickyAction.onclick = () => showTab("group");
+    } else {
+      if (tabName === "teams") {
+        els.stickyNote.textContent = "Pick today’s players → Continue → Generate.";
+        els.stickyAction.textContent = "Generate";
+        els.stickyAction.onclick = () => {
+          els.genCard.style.display = "block";
+          els.genBtn.scrollIntoView({behavior:"smooth", block:"center"});
+        };
+      } else if (tabName === "players") {
+        els.stickyNote.textContent = "Maintain the roster here.";
+        els.stickyAction.textContent = "Add player";
+        els.stickyAction.onclick = () => els.pName.focus();
+      } else {
+        els.stickyNote.textContent = "Connected. You can switch groups anytime.";
+        els.stickyAction.textContent = "Go to Teams";
+        els.stickyAction.onclick = () => showTab("teams");
+      }
     }
-    return t;
   };
 
-  const spread = (arr) => Math.max(...arr) - Math.min(...arr);
+  els.tabs.forEach(btn => btn.addEventListener("click", () => showTab(btn.dataset.tab)));
 
-  const objective = (teams) => {
-    const totals = teams.map(teamTotals);
-
-    // primary fairness drivers
-    let score = (spread(totals.map(t=>t.overall))*2.2)
-              + (spread(totals.map(t=>t.offense))*0.9)
-              + (spread(totals.map(t=>t.defense))*0.9)
-              + (spread(totals.map(t=>t.rebounding))*0.8);
-
-    if (settings.advanced && settings.weights.hustle > 0) {
-      score += spread(totals.map(t=>t.hustle))*0.4;
+  const setConnectedUI = () => {
+    els.groupName.textContent = state.groupCode ? state.groupCode : "None";
+    if (state.groupId) {
+      els.statusText.textContent = "Connected";
+      els.changeGroupBtn.style.display = "inline-flex";
+      els.playersHint.textContent = "Roster is shared in the cloud for this group.";
+    } else {
+      els.statusText.textContent = hasSupabase ? "Not connected" : "Supabase not configured";
+      els.changeGroupBtn.style.display = "none";
+      els.playersHint.textContent = hasSupabase ? "Connect to a group to load players." : "Paste Supabase keys in the file to enable cloud.";
     }
+  };
 
-    // light role/size proxy (avoid "all bigs" / "all guards")
-    score += spread(totals.map(t=>t.b))*0.9;
-    score += spread(totals.map(t=>t.g))*0.6;
-
-    // stability penalty (prefer minimal changes across regenerate)
-    if (settings.stability && state.lastResult && state.lastResult.teams) {
-      const prevMap = new Map();
-      state.lastResult.teams.forEach((team, ti) => team.forEach(p => prevMap.set(p.id, ti)));
-      let moved = 0;
-      teams.forEach((team, ti) => team.forEach(p => { if (prevMap.has(p.id) && prevMap.get(p.id) !== ti) moved++; }));
-      score += moved * 0.22;
+  const clearGroup = () => {
+    localStorage.removeItem(LS_GROUP);
+    localStorage.removeItem(LS_GROUP_ID);
+    state.groupCode = "";
+    state.groupId = "";
+    state.players = [];
+    state.selectedToday = new Set();
+    state.lastResult = null;
+    if (state.realtimeSub && supa) {
+      supa.removeChannel(state.realtimeSub);
     }
-
-    return score;
+    state.realtimeSub = null;
+    setConnectedUI();
+    renderPlayers();
+    renderTodayList();
+    renderResults();
+    showTab("group");
+    els.groupCodeInput.value = "";
   };
 
-  const fairnessLabel = (obj) => {
-    if (obj <= 2.5) return { text: "Excellent", cls: "ok" };
-    if (obj <= 5.5) return { text: "Good", cls: "ok" };
-    if (obj <= 9) return { text: "Okay", cls: "warn" };
-    return { text: "Imbalanced", cls: "bad" };
+  els.changeGroupBtn.addEventListener("click", clearGroup);
+
+  // =========================
+  //  SUPABASE HELPERS
+  // =========================
+  const ensureSupabase = () => {
+    if (!hasSupabase) {
+      setError("Supabase keys are missing. Paste SUPABASE_URL and SUPABASE_ANON_KEY in the file, then redeploy.");
+      return false;
+    }
+    return true;
   };
 
-  const computeDeltas = (teams) => {
-    const totals = teams.map(teamTotals);
-    const delta = (arr) => Math.max(...arr) - Math.min(...arr);
-    return {
-      overall: delta(totals.map(t=>t.overall)),
-      offense: delta(totals.map(t=>t.offense)),
-      defense: delta(totals.map(t=>t.defense)),
-      rebounding: delta(totals.map(t=>t.rebounding)),
-      bigs: delta(totals.map(t=>t.b)),
-      guards: delta(totals.map(t=>t.g)),
+  const normalizeCode = (s) => String(s||"").trim().toUpperCase();
+
+  const getOrCreateGroup = async (code) => {
+    code = normalizeCode(code);
+    const { data: found, error: e1 } = await supa.from("groups").select("*").eq("code", code).maybeSingle();
+    if (e1) throw e1;
+    if (found) return found;
+
+    const { data: created, error: e2 } = await supa.from("groups").insert({ code }).select("*").single();
+    if (e2) throw e2;
+    return created;
+  };
+
+  const loadPlayersCloud = async () => {
+    if (!state.groupId) return [];
+    const { data, error } = await supa
+      .from("players")
+      .select("*")
+      .eq("group_id", state.groupId)
+      .order("created_at", { ascending:false });
+    if (error) throw error;
+    return (data || []).map(x => ({
+      id: x.id,
+      name: x.name,
+      offense: clamp(Number(x.offense||6),1,10),
+      defense: clamp(Number(x.defense||6),1,10),
+      rebounding: clamp(Number(x.rebounding||6),1,10),
+      notes: x.notes || ""
+    }));
+  };
+
+  const upsertPlayerCloud = async (p) => {
+    const payload = {
+      group_id: state.groupId,
+      name: p.name,
+      offense: p.offense,
+      defense: p.defense,
+      rebounding: p.rebounding,
+      notes: p.notes || ""
     };
+    if (p.id) {
+      const { error } = await supa.from("players").update(payload).eq("id", p.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supa.from("players").insert(payload);
+      if (error) throw error;
+    }
   };
 
-  const refreshNeedCounts = () => {
-    els.needCount.textContent = String(totalNeeded());
-    els.selCount.textContent = String(Array.from(state.selected).length);
-    persistSelection();
+  const deletePlayerCloud = async (id) => {
+    const { error } = await supa.from("players").delete().eq("id", id);
+    if (error) throw error;
   };
 
-  const renderWeightsUI = () => {
-    const w = settings.weights;
-    // sliders work in integer % for UX; keep normalized behind the scenes
-    els.wOff.value = String(Math.round(w.offense));
-    els.wDef.value = String(Math.round(w.defense));
-    els.wReb.value = String(Math.round(w.rebounding));
-    els.wHus.value = String(Math.round(w.hustle));
-
-    els.wOffTxt.textContent = `${Math.round(w.offense)}%`;
-    els.wDefTxt.textContent = `${Math.round(w.defense)}%`;
-    els.wRebTxt.textContent = `${Math.round(w.rebounding)}%`;
-    els.wHusTxt.textContent = `${Math.round(w.hustle)}%`;
-
-    const wt = `Off ${Math.round(w.offense)}% / Def ${Math.round(w.defense)}% / Reb ${Math.round(w.rebounding)}%` + (settings.advanced && Math.round(w.hustle)>0 ? ` / Hus ${Math.round(w.hustle)}%` : "");
-    els.weightsText.textContent = wt;
-
-    els.hustleWeightBox.style.display = settings.advanced ? "block" : "none";
+  const subscribePlayers = () => {
+    if (!supa || !state.groupId) return;
+    if (state.realtimeSub) supa.removeChannel(state.realtimeSub);
+    state.realtimeSub = supa
+      .channel("players-" + state.groupId)
+      .on("postgres_changes",
+        { event:"*", schema:"public", table:"players", filter:`group_id=eq.${state.groupId}` },
+        async () => {
+          try{
+            state.players = await loadPlayersCloud();
+            // keep selections that still exist
+            const ids = new Set(state.players.map(p=>p.id));
+            state.selectedToday = new Set(Array.from(state.selectedToday).filter(id=>ids.has(id)));
+            renderPlayers();
+            renderTodayList();
+          }catch(e){}
+        }
+      )
+      .subscribe();
   };
 
-  const setAdvancedUI = () => {
-    els.advancedBox.style.display = settings.advanced ? "block" : "none";
-    els.advancedToggle.textContent = `Advanced: ${settings.advanced ? "On" : "Off"}`;
-    els.hustleWeightBox.style.display = settings.advanced ? "block" : "none";
-    renderWeightsUI();
-  };
-
-  const setCaptainUI = () => {
-    els.captainToggle.textContent = `Captain Mode: ${settings.captain ? "On" : "Off"}`;
-  };
-  const setStabilityUI = () => {
-    els.stabilityToggle.textContent = `Stability: ${settings.stability ? "On" : "Off"}`;
-  };
-
-  const saveSettings = () => saveJSON(STORAGE_KEY_SETTINGS, settings);
-
-  const clearDraft = () => {
-    state.editId = null;
-    els.pName.value = "";
-    els.pNotes.value = "";
-    els.pPreset.value = "";
-    els.pPos.value = "";
-    draft = { offense: 6, defense: 6, rebounding: 6, hustle: 6 };
-    renderDraftButtons();
-    els.saveBtn.textContent = "Add Player";
-    els.cancelBtn.style.display = "none";
-  };
-
+  // =========================
+  //  RENDERERS
+  // =========================
   const renderPlayers = () => {
-    refreshNeedCounts();
-    const numTeams = Number(els.numTeams.value);
-
     els.playerList.innerHTML = "";
+    if (!state.groupId) return;
+
     const frag = document.createDocumentFragment();
-
-    state.players.forEach(p => {
+    for (const p of state.players){
       const item = document.createElement("div");
-      item.className = "item";
-
-      const left = document.createElement("div");
-      left.className = "inline";
-      left.style.alignItems = "flex-start";
-      left.style.paddingTop = "2px";
-
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.checked = state.selected.has(p.id);
-      cb.addEventListener("change", () => {
-        if (cb.checked) state.selected.add(p.id);
-        else state.selected.delete(p.id);
-        refreshNeedCounts();
-        saveSelectedToday();
-        renderPlayers();
-        updateTodayCTA();
-      });
-
-      // Tap anywhere on the row to toggle selection (mobile-friendly)
-      item.classList.add("tappable");
-      item.addEventListener("click", (e) => {
-        if (e.target && e.target.closest && e.target.closest("button, select, input, a")) return;
-        cb.checked = !cb.checked;
-        cb.dispatchEvent(new Event("change", { bubbles: true }));
-      });
-
-      left.appendChild(cb);
+      item.className = "playerCard";
+      item.style.cursor = "default";
 
       const meta = document.createElement("div");
       meta.className = "meta";
-
       const nm = document.createElement("div");
       nm.className = "name";
       nm.textContent = p.name;
 
       const mi = document.createElement("div");
       mi.className = "mini";
-      const extra = (settings.advanced && p.hustle !== undefined) ? ` • Hus ${p.hustle}` : "";
-      const pos = p.pos ? ` • ${p.pos}` : "";
-      mi.textContent = `Overall: ${overall(p).toFixed(1)} • Off ${p.offense} • Def ${p.defense} • Reb ${p.rebounding}${extra}${pos}`;
+      mi.textContent = `Overall ${overall(p).toFixed(1)} • O ${p.offense} • D ${p.defense} • R ${p.rebounding}`;
 
       const tags = document.createElement("div");
       tags.className = "tags";
-      if (p.notes) {
-        const t = document.createElement("span"); t.className = "tag"; t.textContent = p.notes; tags.appendChild(t);
-      }
-      if (p.pos) {
-        const t = document.createElement("span"); t.className = "tag"; t.textContent = (p.pos==="G"?"Guard":p.pos==="W"?"Wing":"Big"); tags.appendChild(t);
-      }
-      if (state.locks[p.id] !== undefined) {
-        const t = document.createElement("span"); t.className = "tag"; t.textContent = `Locked: Team ${state.locks[p.id]+1}`; tags.appendChild(t);
+      if (p.notes){
+        const t = document.createElement("span"); t.className="tag"; t.textContent=p.notes; tags.appendChild(t);
       }
 
       const controls = document.createElement("div");
-      controls.className = "row";
-      controls.style.marginTop = "8px";
+      controls.className = "btnRow";
+      controls.style.marginTop = "10px";
 
-      const lockWrap = document.createElement("div");
-      const lockLabel = document.createElement("label");
-      lockLabel.textContent = "Lock to team (optional)";
-      const lockSel = document.createElement("select");
-      lockSel.innerHTML = `<option value="">No lock</option>` +
-        Array.from({length:numTeams}, (_,i)=>`<option value="${i}">Team ${i+1}</option>`).join("");
-      lockSel.value = (state.locks[p.id] === undefined) ? "" : String(state.locks[p.id]);
-      lockSel.addEventListener("change", () => {
-        if (lockSel.value === "") delete state.locks[p.id];
-        else state.locks[p.id] = Number(lockSel.value);
-        renderPlayers();
-      });
-      lockWrap.appendChild(lockLabel);
-      lockWrap.appendChild(lockSel);
-
-      const btnWrap = document.createElement("div");
-      btnWrap.className = "inline";
-      btnWrap.style.justifyContent = "end";
-      btnWrap.style.gap = "8px";
-
-      const editBtn = document.createElement("button");
-      editBtn.className = "small ghost";
-      editBtn.textContent = "Edit";
-      editBtn.addEventListener("click", () => {
+      const edit = document.createElement("button");
+      edit.className = "ghost";
+      edit.textContent = "Edit";
+      edit.addEventListener("click", () => {
         state.editId = p.id;
         els.pName.value = p.name;
+        els.pOff.value = String(p.offense);
+        els.pDef.value = String(p.defense);
+        els.pReb.value = String(p.rebounding);
         els.pNotes.value = p.notes || "";
-        els.pPos.value = p.pos || "";
-        draft.offense = p.offense;
-        draft.defense = p.defense;
-        draft.rebounding = p.rebounding;
-        draft.hustle = p.hustle ?? 6;
-        renderDraftButtons();
-        els.pPreset.value = "";
-        els.saveBtn.textContent = "Save Changes";
-        els.cancelBtn.style.display = "inline-block";
-        setError("");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        els.savePlayerBtn.textContent = "Save changes";
+        els.cancelEditBtn.style.display = "inline-block";
+        showTab("players");
+        els.pName.scrollIntoView({behavior:"smooth", block:"center"});
+        els.pName.focus();
       });
 
-      const delBtn = document.createElement("button");
-      delBtn.className = "small danger";
-      delBtn.textContent = "Delete";
-      delBtn.addEventListener("click", async () => {
-        state.players = state.players.filter(x => x.id !== p.id);
-        state.selected.delete(p.id);
-        delete state.locks[p.id];
-if (state.groupId && supabase) {
-  try {
-    await storageDeletePlayer(p.id);
-    state.players = await storageLoadPlayers();
-  } catch (e) {
-    setError("Delete failed. Check cloud configuration or try again.");
-    return;
-  }
-} else {
-  savePlayersLocal(state.players);
-}
-        state.lastResult = null;
-        renderPlayers();
-        renderResults();
+      const del = document.createElement("button");
+      del.className = "danger";
+      del.textContent = "Delete";
+      del.addEventListener("click", async () => {
+        if (!confirm(`Delete ${p.name}?`)) return;
+        try{
+          setError("");
+          await deletePlayerCloud(p.id);
+          // realtime will refresh
+        }catch(e){
+          setError("Delete failed. Check Supabase policies (RLS) and try again.");
+        }
       });
 
-      btnWrap.appendChild(editBtn);
-      btnWrap.appendChild(delBtn);
-
-      controls.appendChild(lockWrap);
-      controls.appendChild(btnWrap);
+      controls.appendChild(edit);
+      controls.appendChild(del);
 
       meta.appendChild(nm);
       meta.appendChild(mi);
       meta.appendChild(tags);
       meta.appendChild(controls);
 
-      item.appendChild(left);
       item.appendChild(meta);
-
       frag.appendChild(item);
-    });
-
+    }
     els.playerList.appendChild(frag);
   };
 
-  const generateTeams = (iterations = 9000) => {
-    setError("");
-    const teamSize = Number(els.gameSize.value);
-    const numTeams = Number(els.numTeams.value);
-    const needed = teamSize * numTeams;
+  const renderTodayList = () => {
+    els.todayList.innerHTML = "";
+    if (!state.groupId) return;
 
-    const selectedPlayers = state.players.filter(p => state.selected.has(p.id));
-    if (selectedPlayers.length < needed) {
+    const frag = document.createDocumentFragment();
+    for (const p of state.players){
+      const on = state.selectedToday.has(p.id);
+      const item = document.createElement("div");
+      item.className = "playerCard";
+      item.addEventListener("click", () => {
+        if (state.selectedToday.has(p.id)) state.selectedToday.delete(p.id);
+        else state.selectedToday.add(p.id);
+        refreshCounts();
+        // update checkbox state visually
+        renderTodayList(); // small list, ok
+      });
 
-      setError(`Not enough selected players. Need ${needed}, but you selected ${selectedPlayers.length}.`);
-      return null;
+      const cb = document.createElement("div");
+      cb.className = "cb" + (on ? " on" : "");
+      cb.innerHTML = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16.6 6.2L8.6 14.2L3.4 9" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const nm = document.createElement("div");
+      nm.className = "name";
+      nm.textContent = p.name;
+      const mi = document.createElement("div");
+      mi.className = "mini";
+      mi.textContent = `O ${p.offense} • D ${p.defense} • R ${p.rebounding}`;
+      meta.appendChild(nm); meta.appendChild(mi);
+
+      item.appendChild(cb);
+      item.appendChild(meta);
+      frag.appendChild(item);
+    }
+    els.todayList.appendChild(frag);
+    refreshCounts();
+  };
+
+  const refreshCounts = () => {
+    els.selCount.textContent = String(state.selectedToday.size);
+    els.needCount.textContent = String(totalNeeded());
+  };
+
+  const renderResults = () => {
+    els.results.innerHTML = "";
+    const res = state.lastResult;
+    if (!res) {
+      const div = document.createElement("div");
+      div.className = "note";
+      div.innerHTML = "After you click <b>Generate teams</b>, results will appear here.";
+      els.results.appendChild(div);
+      return;
     }
 
-    // pick who plconst generateTeams = (iterations = 9000) => {
-    setError("");
-    const teamSize = Number(els.gameSize.value);
-    const numTeams = Number(els.numTeams.value);
-    const needed = teamSize * numTeams;
+    const label = fairnessLabel(res.objective);
+    const kpiRow = document.createElement("div");
+    kpiRow.className = "kpiRow";
 
-    const selectedPlayers = state.players.filter(p => state.selected.has(p.id));
-    if (selectedPlayers.length < needed) {
-      setError(`Not enough selected players. Need ${needed}, but you selected ${selectedPlayers.length}.`);
-      return null;
-    }
+    const k1 = document.createElement("div");
+    k1.className = "kpi";
+    k1.innerHTML = `<div class="k">Fairness</div><div class="v ${label.cls}">${label.text}</div>
+                    <div class="note" style="margin-top:6px">Balances weighted overall (O/D/R = 40/40/20) and category spreads.</div>`;
 
-    // Use exactly the players for today; if more than needed are selected, take the top N by overall.
-    const roster = selectedPlayers.slice().sort((a,b)=>overall(b)-overall(a)).slice(0, needed);
+    const k2 = document.createElement("div");
+    k2.className = "kpi";
+    k2.innerHTML = `<div class="k">Players used</div><div class="v">${res.needed}</div>
+                    <div class="note" style="margin-top:6px">Uses top ${res.needed} selected players to fit the format.</div>`;
 
-    // validate locks
-    const counts = Array(numTeams).fill(0);
-    for (const p of roster) {
-      const li = state.locks[p.id];
-      if (li !== undefined) {
-        counts[li] += 1;
-        if (counts[li] > teamSize) {
-          setError("Locks make at least one team exceed the required team size. Remove some locks and try again.");
-          return null;
-        }
+    kpiRow.appendChild(k1); kpiRow.appendChild(k2);
+    els.results.appendChild(kpiRow);
+
+    const teamGrid = document.createElement("div");
+    teamGrid.className = "teamGrid";
+
+    res.teams.forEach((team, idx) => {
+      const totals = teamTotals(team);
+      const card = document.createElement("div");
+      card.className = "teamCard";
+
+      const head = document.createElement("div");
+      head.className = "teamHeader";
+      head.innerHTML = `<div class="teamTitle">Team ${idx+1}</div>
+                        <div class="score">Overall ${totals.overall.toFixed(1)}<br/>O ${totals.offense} • D ${totals.defense} • R ${totals.rebounding}</div>`;
+      card.appendChild(head);
+
+      const list = document.createElement("div");
+      list.style.marginTop = "10px";
+      for (const p of team){
+        const row = document.createElement("div");
+        row.className = "playerRow";
+        row.innerHTML = `<div><div class="name" style="font-size:15px">${p.name}</div><div class="mini">${p.notes || ""}</div></div>
+                         <div class="score">O ${p.offense} / D ${p.defense} / R ${p.rebounding}</div>`;
+        list.appendChild(row);
       }
+      card.appendChild(list);
+      teamGrid.appendChild(card);
+    });
+
+    els.results.appendChild(teamGrid);
+  };
+
+  // =========================
+  //  TEAM GENERATION
+  // =========================
+  const generateTeams = (iterations = 8000) => {
+    setError("");
+    const teamSize = Number(els.gameSize.value);
+    const numTeams = Number(els.numTeams.value);
+    const needed = teamSize * numTeams;
+
+    const selectedPlayers = state.players.filter(p => state.selectedToday.has(p.id));
+    if (selectedPlayers.length < needed) {
+      setError(`Not enough selected players. Need ${needed}, but selected ${selectedPlayers.length}.`);
+      return null;
     }
 
-    const locked = [];
-    const unlocked = [];
-    for (const p of roster) (state.locks[p.id] !== undefined ? locked : unlocked).push(p);
+    // Use top N by overall
+    const roster = selectedPlayers.slice().sort((a,b)=>overall(b)-overall(a)).slice(0, needed);
+    const base = roster.slice().sort((a,b)=>overall(b)-overall(a));
 
-    const base = unlocked.slice().sort((a,b)=>overall(b)-overall(a));
     let bestTeams = null;
     let bestObj = Infinity;
 
     const build = (perm) => {
       const teams = Array.from({length:numTeams}, ()=>[]);
-      for (const p of locked) teams[state.locks[p.id]].push(p);
-
       let t = 0;
-      for (const p of perm) {
+      for (const p of perm){
+        // round robin fill
         let safety = 0;
         while (teams[t].length >= teamSize && safety < numTeams) { t = (t+1)%numTeams; safety++; }
-        if (teams[t].length < teamSize) teams[t].push(p);
+        teams[t].push(p);
         t = (t+1)%numTeams;
       }
       return teams;
@@ -1155,503 +850,190 @@ if (state.groupId && supabase) {
       if (obj < bestObj) { bestObj = obj; bestTeams = teams; }
     }
 
-    const deltas = computeDeltas(bestTeams);
-    return { teams: bestTeams, objective: bestObj, needed, rosterIds: roster.map(p=>p.id), deltas };
-  };ms.</div>`;
-      els.results.appendChild(div);
-      return;
-    }
-
-    const label = fairnessLabel(res.objective);
-
-    const kpiRow = document.createElement("div");
-    kpiRow.className = "kpiRow";
-
-    const k1 = document.createElement("div");
-    k1.className = "kpi";
-    k1.innerHTML = `<div class="k">Fairness</div><div class="v ${label.cls}">${label.text}</div>
-                    <div class="note" style="margin-top:6px">Lower is better. Uses your current weights and category spreads.</div>`;
-
-    const k2 = document.createElement("div");
-    k2.className = "kpi";
-    k2.innerHTML = `<div class="k">Players used</div><div class="v">${res.needed}</div>
-                    <div class="note" style="margin-top:6px">Uses top ${res.needed} selected players to fit the format.</div>`;
-
-    const k3 = document.createElement("div");
-    k3.className = "kpi";
-    const d = res.deltas || computeDeltas(res.teams);
-    k3.innerHTML = `<div class="k">Team deltas</div>
-                    <div class="v">${d.overall.toFixed(1)}</div>
-                    <div class="note" style="margin-top:6px">Overall Δ. Off Δ ${d.offense.toFixed(0)} • Def Δ ${d.defense.toFixed(0)} • Reb Δ ${d.rebounding.toFixed(0)} • Bigs Δ ${d.bigs.toFixed(0)} • Guards Δ ${d.guards.toFixed(0)}</div>`;
-
-    kpiRow.appendChild(k1); kpiRow.appendChild(k2); kpiRow.appendChild(k3);
-    els.results.appendChild(kpiRow);
-
-    const div = document.createElement("div");
-    div.className = "divider";
-    els.results.appendChild(div);
-
-    if (settings.captain) {
-      const hint = document.createElement("div");
-      hint.className = "note dragHint";
-      hint.textContent = "Captain Mode is ON: drag a player name and drop onto another team to move them. Fairness updates instantly.";
-      els.results.appendChild(hint);
-      const dd = document.createElement("div"); dd.className="divider"; els.results.appendChild(dd);
-    }
-
-
-    // Bench / sitting out list (when more players are selected than needed)
-    const benchIds = Array.isArray(res.benchIds) ? res.benchIds : [];
-    if (benchIds.length) {
-      const benchCard = document.createElement("div");
-      benchCard.className = "teamCard";
-      benchCard.style.marginBottom = "12px";
-      const names = benchIds
-        .map(id => state.players.find(p=>p.id===id))
-        .filter(Boolean)
-        .map(p => p.name);
-      benchCard.innerHTML = `<div class="teamHeader">
-          <div class="teamTitle">Sitting out (${names.length})</div>
-          <div class="score">Tip: If you have extra players, just select who is playing today.</div>
-        </div>
-        <div class="note" style="margin-top:8px">${names.map(n=>`<span class="tag">${n}</span>`).join(" ")}</div>`;
-      els.results.appendChild(benchCard);
-      const dd = document.createElement("div"); dd.className="divider"; els.results.appendChild(dd);
-    }
-
-    const teamGrid = document.createElement("div");
-    teamGrid.className = "teamGrid";
-
-    // Drag and drop handlers
-    let dragPayload = null;
-
-    const onDragStart = (e, fromTeamIdx, playerId) => {
-      dragPayload = { fromTeamIdx, playerId };
-      try { e.dataTransfer.setData("text/plain", playerId); } catch {}
-      e.dataTransfer.effectAllowed = "move";
-    };
-    const onDragOver = (e) => {
-      if (!settings.captain) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
-    };
-    const onDropTeam = (e, toTeamIdx) => {
-      if (!settings.captain) return;
-      e.preventDefault();
-      if (!dragPayload) return;
-      const { fromTeamIdx, playerId } = dragPayload;
-      if (fromTeamIdx === toTeamIdx) return;
-
-      const fromTeam = res.teams[fromTeamIdx];
-      const toTeam = res.teams[toTeamIdx];
-
-      const pIdx = fromTeam.findIndex(p => p.id === playerId);
-      if (pIdx < 0) return;
-
-      const [p] = fromTeam.splice(pIdx, 1);
-
-      // maintain team sizes: move someone back if needed
-      if (toTeam.length >= fromTeam.length + 2) {
-        // not expected; keep safe
-      }
-      toTeam.push(p);
-
-      // If team sizes now unequal, swap last player back to preserve exact format
-      const teamSize = Number(els.gameSize.value);
-      if (toTeam.length > teamSize) {
-        const swapped = toTeam.splice(toTeam.length-1,1)[0];
-        fromTeam.push(swapped);
-      }
-      if (fromTeam.length > teamSize) {
-        const swapped = fromTeam.splice(fromTeam.length-1,1)[0];
-        toTeam.push(swapped);
-      }
-
-      res.objective = objective(res.teams);
-      res.deltas = computeDeltas(res.teams);
-      state.lastResult = res;
-      renderResults();
-    };
-
-    res.teams.forEach((team, idx) => {
-      const totals = teamTotals(team);
-
-      const card = document.createElement("div");
-      card.className = "teamCard";
-      card.addEventListener("dragover", onDragOver);
-      card.addEventListener("drop", (e)=>onDropTeam(e, idx));
-
-      const head = document.createElement("div");
-      head.className = "teamHeader";
-      const extra = (settings.advanced && settings.weights.hustle>0) ? ` • Hus ${totals.hustle}` : "";
-      head.innerHTML = `<div class="teamTitle">Team ${idx+1}</div>
-                        <div class="score">Overall: ${totals.overall.toFixed(1)} • Off ${totals.offense} • Def ${totals.defense} • Reb ${totals.rebounding}${extra} • Bigs ${totals.b} • Guards ${totals.g}</div>`;
-
-      card.appendChild(head);
-
-      const list = document.createElement("div");
-      list.style.marginTop = "8px";
-
-      team.forEach(p => {
-        const row = document.createElement("div");
-        row.className = "playerRow";
-        if (settings.captain) {
-          row.draggable = true;
-          row.addEventListener("dragstart", (e)=>onDragStart(e, idx, p.id));
-        }
-        const pos = p.pos ? ` • ${p.pos}` : "";
-        const hus = (settings.advanced && p.hustle !== undefined && settings.weights.hustle>0) ? ` • H ${p.hustle}` : "";
-        row.innerHTML = `<div><div class="name">${p.name}</div><div class="mini">${(p.notes || "")}${p.pos ? " • " + (p.pos==="G"?"Guard":p.pos==="W"?"Wing":"Big") : ""}</div></div>
-                         <div class="right">O ${p.offense} / D ${p.defense} / R ${p.rebounding}${hus}</div>`;
-        list.appendChild(row);
-      });
-
-      card.appendChild(list);
-      teamGrid.appendChild(card);
-    });
-
-    els.results.appendChild(teamGrid);
+    return { teams: bestTeams, objective: bestObj, needed };
   };
 
-  // Weight preset logic
-  const applyWeightPreset = (preset) => {
-    const P = {
-      default:   { offense: 40, defense: 40, rebounding: 20, hustle: settings.weights.hustle || 0 },
-      defense:   { offense: 30, defense: 55, rebounding: 15, hustle: settings.weights.hustle || 0 },
-      offense:   { offense: 55, defense: 30, rebounding: 15, hustle: settings.weights.hustle || 0 },
-      rebounding:{ offense: 30, defense: 30, rebounding: 40, hustle: settings.weights.hustle || 0 },
-      balanced:  { offense: 33, defense: 33, rebounding: 34, hustle: settings.weights.hustle || 0 },
-    };
-    if (!P[preset]) return;
-    settings.weights = normalizeWeights(P[preset]);
-    settings.weightPreset = preset;
-    els.weightPreset.value = preset === "custom" ? "custom" : preset;
-    saveSettings();
-    renderWeightsUI();
-    state.lastResult = null;
-    renderResults();
-    renderPlayers();
-  };
-
-  const updateWeightsFromSliders = () => {
-    els.weightPreset.value = "custom";
-    settings.weightPreset = "custom";
-
-    settings.weights = normalizeWeights({
-      offense: Number(els.wOff.value),
-      defense: Number(els.wDef.value),
-      rebounding: Number(els.wReb.value),
-      hustle: Number(els.wHus.value),
-    });
-
-    saveSettings();
-    renderWeightsUI();
-    state.lastResult = null;
-    renderResults();
-    renderPlayers();
-  };
-
-  // Events
-  els.pPreset.addEventListener("change", () => applyPreset(els.pPreset.value));
-
-  els.advancedToggle.addEventListener("click", () => {
-    settings.advanced = !settings.advanced;
-    // default hustle weight to 0 when turning off
-    if (!settings.advanced) settings.weights = normalizeWeights({ ...settings.weights, hustle: 0 });
-    saveSettings();
-    setAdvancedUI();
-    renderPlayers();
-    state.lastResult = null;
-    renderResults();
-  });
-
-  els.captainToggle.addEventListener("click", () => {
-    settings.captain = !settings.captain;
-    saveSettings();
-    setCaptainUI();
-    renderResults();
-  });
-
-  els.stabilityToggle.addEventListener("click", () => {
-    settings.stability = !settings.stability;
-    saveSettings();
-    setStabilityUI();
-  });
-
-  els.weightPreset.addEventListener("change", () => {
-    const v = els.weightPreset.value;
-    if (v === "custom") return;
-    applyWeightPreset(v);
-  });
-
-  els.wOff.addEventListener("input", updateWeightsFromSliders);
-  els.wDef.addEventListener("input", updateWeightsFromSliders);
-  els.wReb.addEventListener("input", updateWeightsFromSliders);
-  els.wHus.addEventListener("input", updateWeightsFromSliders);
-
-  els.gameSize.addEventListener("change", () => { refreshNeedCounts(); updateTodayCTA(); state.lastResult = null; renderResults(); });
-  els.numTeams.addEventListener("change", () => { refreshNeedCounts(); renderPlayers(); updateTodayCTA(); state.lastResult = null; renderResults(); });
-
-  els.saveBtn.addEventListener("click", async () => {
-  setError("");
-  const name = els.pName.value.trim();
-  if (!name) { setError("Player name is required."); return; }
-
-  const p = {
-    id: state.editId || null,
-    name,
-    offense: clamp(Number(draft.offense || 6), 1, 10),
-    defense: clamp(Number(draft.defense || 6), 1, 10),
-    rebounding: clamp(Number(draft.rebounding || 6), 1, 10),
-    hustle: settings.advanced ? clamp(Number(draft.hustle || 6), 1, 10) : null,
-    pos: settings.advanced ? (els.pPos.value || "") : (els.pPos.value || ""),
-    notes: els.pNotes.value.trim()
-  };
-
-  try {
-    if (state.groupId && supabase) {
-      const newId = await storageUpsertPlayer(p);
-      // reload from cloud so everyone stays consistent
-      state.players = await storageLoadPlayers();
-      // ensure selection includes new player if it was an add
-      if (!state.editId && newId) state.selected.add(newId);
-    } else {
-      // local
-      const id = p.id || uid();
-      const localP = {
-        id,
-        name: p.name,
-        offense: p.offense,
-        defense: p.defense,
-        rebounding: p.rebounding,
-        hustle: settings.advanced ? p.hustle : undefined,
-        pos: p.pos || "",
-        notes: p.notes
-      };
-
-      if (state.editId) {
-        state.players = state.players.map(x => x.id === state.editId ? { ...x, ...localP } : x);
-      } else {
-        state.players = [localP, ...state.players];
-        state.selected.add(id);
-      }
-      savePlayersLocal(state.players);
+  // =========================
+  //  EVENTS
+  // =========================
+  els.copyInviteBtn.addEventListener("click", async () => {
+    const code = normalizeCode(els.groupCodeInput.value || state.groupCode || "");
+    if (!code) { setError("Enter a group code first."); return; }
+    const url = new URL(window.location.href);
+    url.searchParams.set("group", code);
+    try{
+      await navigator.clipboard.writeText(url.toString());
+      els.statusText.textContent = "Invite link copied";
+      setTimeout(()=>setConnectedUI(), 900);
+    } catch {
+      setError("Could not copy. Your browser may block clipboard access.");
     }
-  } catch (e) {
-    setError("Save failed. Check cloud configuration or try again.");
-    return;
-  }
+  });
 
-  clearDraft();
-  state.lastResult = null;
-  renderPlayers();
-  renderResults();
-});
+  els.joinBtn.addEventListener("click", async () => {
+    setError("");
+    if (!ensureSupabase()) return;
 
-  els.cancelBtn.addEventListener("click", () => { clearDraft(); setError(""); });
+    const code = normalizeCode(els.groupCodeInput.value);
+    if (!code) { setError("Group code is required."); return; }
 
+    els.joinBtn.disabled = true;
+    els.joinBtn.textContent = "Connecting...";
+    try{
+      const g = await getOrCreateGroup(code);
+      state.groupCode = g.code;
+      state.groupId = g.id;
 
-const joinCloudGroup = async (code) => {
-  setError("");
-  if (!supabaseConfigured || !supabase) {
-    setError("Cloud sync is not enabled yet. Paste SUPABASE_URL and SUPABASE_ANON_KEY in the script, then reload.");
-    return false;
-  }
-  code = (code || "").trim().toUpperCase();
-  if (!code) { setError("Please enter a group code."); return false; }
+      localStorage.setItem(LS_GROUP, state.groupCode);
+      localStorage.setItem(LS_GROUP_ID, state.groupId);
 
-  try {
-    const group = await getOrCreateGroup(code);
-    state.groupId = group.id;
-    state.groupCode = group.code;
-    saveJSON(STORAGE_KEY_CLOUD, { groupCode: state.groupCode, groupId: state.groupId });
+      setConnectedUI();
 
-    setCloudStatus(`Connected: ${state.groupCode}`, "ok");
-    updateHeader();
-
-    state.players = await storageLoadPlayers();
-
-    // Load today's selection for this group (fallback = all players)
-    const sel = loadSelectedToday();
-    state.selected = sel.size ? sel : new Set(state.players.map(p=>p.id));
-    saveSelectedToday();
-
-    state.locks = {};
-    state.lastResult = null;
-
-    renderPlayers();
-    renderResults();
-    updateTodayCTA();
-
-    // Live roster updates (if enabled) - keep today's selection valid
-    subscribePlayersCloud(state.groupId, async () => {
-      state.players = await storageLoadPlayers();
-      const existing = new Set(state.players.map(p=>p.id));
-      state.selected = new Set(Array.from(state.selected).filter(id => existing.has(id)));
-      if (state.selected.size === 0) state.players.forEach(p => state.selected.add(p.id));
-      saveSelectedToday();
+      state.players = await loadPlayersCloud();
+      // default select all for today
+      state.selectedToday = new Set(state.players.map(p=>p.id));
+      state.lastResult = null;
       renderPlayers();
-      updateTodayCTA();
-    });
+      renderTodayList();
+      renderResults();
+      subscribePlayers();
 
-    setActiveStep("today");
-    return true;
-  } catch (e) {
-    setError("Could not join/create group. Verify your Supabase tables/policies and try again.");
-    return false;
-  }
-};
+      // go to Teams by default after connect
+      showTab("teams");
+      els.genCard.style.display = "none";
+      els.statusText.textContent = "Connected";
+    } catch(e){
+      setError("Join/Create failed. Check Supabase tables (groups, players) and RLS policies.");
+    } finally {
+      els.joinBtn.disabled = false;
+      els.joinBtn.textContent = "Join / Create";
+    }
+  });
 
-// Auto-join from invite link: ?group=CODE
-try {
-  const qp = new URLSearchParams(location.search);
-  const g = qp.get("group");
-  if (g && supabaseConfigured) {
-    els.groupCode.value = g;
-    joinCloudGroup(g);
-  }
-} catch {}
+  const clearDraft = () => {
+    state.editId = null;
+    els.pName.value = "";
+    els.pOff.value = "6";
+    els.pDef.value = "6";
+    els.pReb.value = "6";
+    els.pNotes.value = "";
+    els.savePlayerBtn.textContent = "Add player";
+    els.cancelEditBtn.style.display = "none";
+  };
 
+  els.cancelEditBtn.addEventListener("click", () => { clearDraft(); setError(""); });
 
-// Restore last group (optional)
-try {
-  const saved = loadJSON(STORAGE_KEY_CLOUD, null);
-  if (!state.groupId && saved && saved.groupCode && supabaseConfigured) {
-    els.groupCode.value = saved.groupCode;
-    await joinCloudGroup(saved.groupCode);
-  }
-} catch {}
+  els.savePlayerBtn.addEventListener("click", async () => {
+    setError("");
+    if (!ensureSupabase()) return;
+    if (!state.groupId) { setError("Connect to a group first."); showTab("group"); return; }
 
-// Default screen
-updateHeader();
-setActiveStep(state.groupId ? "today" : "cloud");
+    const name = String(els.pName.value||"").trim();
+    if (!name) { setError("Player name is required."); return; }
 
-els.joinGroupBtn && els.joinGroupBtn.addEventListener("click", async () => {
-  await joinCloudGroup(els.groupCode.value);
-});
+    const p = {
+      id: state.editId || null,
+      name,
+      offense: clamp(Number(els.pOff.value||6),1,10),
+      defense: clamp(Number(els.pDef.value||6),1,10),
+      rebounding: clamp(Number(els.pReb.value||6),1,10),
+      notes: String(els.pNotes.value||"").trim()
+    };
 
-  // Step buttons (simple navigation)
-  els.stepCloud && els.stepCloud.addEventListener("click", () => setActiveStep("cloud"));
-  els.stepToday && els.stepToday.addEventListener("click", () => { if (state.groupId) setActiveStep("today"); });
-  els.stepTeams && els.stepTeams.addEventListener("click", () => { if (state.groupId) setActiveStep("teams"); });
+    els.savePlayerBtn.disabled = true;
+    els.savePlayerBtn.textContent = state.editId ? "Saving..." : "Adding...";
+    try{
+      await upsertPlayerCloud(p);
+      clearDraft();
+      // realtime refresh should update list; fallback reload:
+      state.players = await loadPlayersCloud();
+      const ids = new Set(state.players.map(x=>x.id));
+      state.selectedToday = new Set(state.players.map(x=>x.id).filter(id => ids.has(id)));
+      renderPlayers();
+      renderTodayList();
+    } catch(e){
+      setError("Save failed. Check Supabase RLS policies and try again.");
+    } finally {
+      els.savePlayerBtn.disabled = false;
+      els.savePlayerBtn.textContent = state.editId ? "Save changes" : "Add player";
+    }
+  });
 
-  // Change group = "log off"
-  els.changeGroupBtn && els.changeGroupBtn.addEventListener("click", () => {
-    state.groupId = null;
-    state.groupCode = "";
-    state.players = [];
-    state.selected = new Set();
-    state.locks = {};
+  els.selectAllBtn.addEventListener("click", () => {
+    state.selectedToday = new Set(state.players.map(p=>p.id));
+    renderTodayList();
+  });
+
+  els.clearSelBtn.addEventListener("click", () => {
+    state.selectedToday = new Set();
     state.lastResult = null;
-    saveJSON(STORAGE_KEY_CLOUD, { groupCode: "", groupId: null });
-    setCloudStatus("Not connected", "warn");
-    updateHeader();
-    renderPlayers();
+    renderTodayList();
     renderResults();
-    setActiveStep("cloud");
+    els.genCard.style.display = "none";
   });
 
-  // Today screen helpers
-  els.selectAllBtn && els.selectAllBtn.addEventListener("click", () => {
-    state.players.forEach(p => state.selected.add(p.id));
-    saveSelectedToday();
-    renderPlayers();
-    updateTodayCTA();
-  });
-  els.selectNoneBtn && els.selectNoneBtn.addEventListener("click", () => {
-    state.selected = new Set();
-    saveSelectedToday();
-    renderPlayers();
-    updateTodayCTA();
-  });
-  els.toTeamsBtn && els.toTeamsBtn.addEventListener("click", () => {
-    setActiveStep("teams");
+  els.continueBtn.addEventListener("click", () => {
+    setError("");
+    if (!state.groupId) { setError("Connect to a group first."); showTab("group"); return; }
+    els.genCard.style.display = "block";
+    refreshCounts();
+    els.genBtn.scrollIntoView({behavior:"smooth", block:"center"});
   });
 
+  els.gameSize.addEventListener("change", () => { refreshCounts(); state.lastResult=null; renderResults(); });
+  els.numTeams.addEventListener("change", () => { refreshCounts(); state.lastResult=null; renderResults(); });
 
-
-
-  
-  els.copyInviteBtn && els.copyInviteBtn.addEventListener("click", async () => {
-    const code = normalizeCode(els.groupCode.value || state.groupCode);
-    if (!code) { setError("Enter a group code first, then copy the invite link."); return; }
-    const url = `${location.origin}${location.pathname}?group=${encodeURIComponent(code)}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCloudStatus(`Invite copied`, "ok");
-      setTimeout(()=>setCloudStatus(state.groupId ? `Cloud: ${state.groupCode}` : (supabaseConfigured ? "Cloud ready" : "Local only"), state.groupId ? "ok" : ""), 1200);
-    } catch {
-      prompt("Copy this invite link:", url);
-    }
-  });
-
-els.genBtn.addEventListener("click", () => {
-    const res = generateTeams(9500);
+  const doGenerate = () => {
+    const res = generateTeams(9000);
     if (!res) return;
     state.lastResult = res;
     renderResults();
-  });
+  };
 
-  els.regenBtn.addEventListener("click", () => {
-    const res = generateTeams(9500);
-    if (!res) return;
-    state.lastResult = res;
+  els.genBtn.addEventListener("click", doGenerate);
+  els.rerollBtn.addEventListener("click", doGenerate);
 
-    saveRotation();
-    renderPlayers();
-    renderResults();
-  });
+  // =========================
+  //  BOOTSTRAP (AUTO JOIN)
+  // =========================
+  const bootstrap = async () => {
+    setError("");
+    setConnectedUI();
 
-  els.clearLocksBtn.addEventListener("click", () => {
-    state.locks = {};
-    renderPlayers();
-  });
+    // auto-fill group from invite link ?group=
+    const url = new URL(window.location.href);
+    const qGroup = normalizeCode(url.searchParams.get("group") || "");
+    if (qGroup) els.groupCodeInput.value = qGroup;
 
+    const cachedCode = normalizeCode(localStorage.getItem(LS_GROUP) || "");
+    const cachedId = localStorage.getItem(LS_GROUP_ID) || "";
 
-  // Mobile sticky bar buttons mirror the main actions
-  if (els.stickyGen) els.stickyGen.addEventListener("click", () => els.genBtn.click());
-  if (els.stickyRegen) els.stickyRegen.addEventListener("click", () => els.regenBtn.click());
-  if (els.stickyClear) els.stickyClear.addEventListener("click", () => els.clearLocksBtn.click());
-
-
-  els.copyBtn.addEventListener("click", async () => {
-    if (!state.lastResult) { setError("Generate teams first."); return; }
-    try {
-      await navigator.clipboard.writeText(teamsToText(state.lastResult));
-      setError("");
-    } catch {
-      setError("Copy failed on this browser. Try using Share instead.");
-    }
-  });
-
-  els.shareBtn.addEventListener("click", async () => {
-    if (!state.lastResult) { setError("Generate teams first."); return; }
-    const text = teamsToText(state.lastResult);
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "Pickup Teams", text });
-        setError("");
-      } else {
-        await navigator.clipboard.writeText(text);
-        setError("Sharing not supported here; copied to clipboard instead.");
+    // If we have cached group and supabase configured, auto-join and go to Teams
+    if (cachedCode && cachedId && hasSupabase) {
+      state.groupCode = cachedCode;
+      state.groupId = cachedId;
+      setConnectedUI();
+      els.statusText.textContent = "Connecting...";
+      try{
+        state.players = await loadPlayersCloud();
+        state.selectedToday = new Set(state.players.map(p=>p.id));
+        renderPlayers();
+        renderTodayList();
+        renderResults();
+        subscribePlayers();
+        showTab("teams");
+      } catch(e){
+        // fall back to Group screen if cache invalid
+        clearGroup();
       }
-    } catch {
-      // no-op: user may cancel share
+    } else {
+      // default: if invite group exists, show Group screen
+      showTab("group");
     }
-  });
+  };
 
-  // Initial UI setup
-  els.weightPreset.value = settings.weightPreset || "default";
-  setAdvancedUI();
-  setCaptainUI();
-  setStabilityUI();
-  renderWeightsUI();
-  renderPlayers();
-  refreshNeedCounts();
-  renderResults();
+  bootstrap();
 })();
 </script>
-<!-- Mobile sticky action bar -->
-
 </body>
 </html>
