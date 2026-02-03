@@ -118,6 +118,9 @@
       -webkit-tap-highlight-color: transparent;
     }
     .playerCard:active{transform:translateY(1px)}
+    .playerCard.disabled{opacity:.55; cursor:not-allowed}
+    .playerCard.disabled:active{transform:none}
+
     .cb{
       width:22px;height:22px;border-radius:7px;
       border:1px solid var(--line2);
@@ -272,17 +275,22 @@
 
       <div class="chipRow">
         <div class="chip"><span style="opacity:.8">Selected:</span> <b id="selCount">0</b></div>
-        <div class="chip"><span style="opacity:.8">Needed:</span> <b id="needCount">10</b></div>
+        <div class="chip"><span style="opacity:.8">Needed:</span> <b id="needCount">8</b></div>
       </div>
+
+
+      <div class="divider"></div>
+<div class="note" style="margin-top:8px">This format needs <b><span id="needInline">8</span></b> players. Select exactly that many below.</div>
+
 
       <div class="divider"></div>
 
       <h3 style="margin:0 0 8px 0;font-size:16px">Who’s playing today?</h3>
-      <div class="note">Tap players to select them. Then continue to generation.</div>
+      <div class="note">Tap players to select them. When you reach the needed count, the rest will be disabled.</div>
       <div id="todayList" class="list" style="margin-top:10px"></div>
 
       <div class="btnRow" style="margin-top:12px">
-        <button id="continueBtn" class="primary">Continue</button>
+        <button id="continueBtn" class="primary">Continue to Generate</button>
         <button id="selectAllBtn" class="ghost">Select all</button>
       </div>
 
@@ -336,7 +344,7 @@
   //  SUPABASE CONFIG (PASTE)
   // =========================
   const SUPABASE_URL = "https://qkfgnsytldnhenhfqhvr.supabase.co";        // e.g., "https://xxxx.supabase.co"
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZmduc3l0bGRuaGVuaGZxaHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTIwOTEsImV4cCI6MjA4NTAyODA5MX0.I9JcTBoZpxT9eTz8dGP_7kXeH0fqu7A_qJ5NK7HknGE";   // anon public key
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZmduc3l0bGRuaGVuaGZxaHZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NTIwOTEsImV4cCI6MjA4NTAyODA5MX0.I9JcTBoZpxT9eTz8dGP_7kXeH0fqu7A_qJ5NK7HknGE";   // anon public key  // anon public key
   const hasSupabase = !!(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase);
 
   const supa = hasSupabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -382,6 +390,7 @@
     // Teams
     selCount: document.getElementById("selCount"),
     needCount: document.getElementById("needCount"),
+    needInline: document.getElementById("needInline"),
     todayList: document.getElementById("todayList"),
     continueBtn: document.getElementById("continueBtn"),
     selectAllBtn: document.getElementById("selectAllBtn"),
@@ -421,14 +430,15 @@
   const uid = () => Math.random().toString(36).slice(2,10) + "-" + Date.now().toString(36);
 
   // Balancing weights (simple default)
-  const W = { offense:0.4, defense:0.4, rebounding:0.2 };
-  const overall = (p)=> (p.offense*W.offense)+(p.defense*W.defense)+(p.rebounding*W.rebounding);
+  const W = { offense:0.5, defense:0.25, rebounding:0.25 };
+  const overall = (p)=> (p.offense + p.defense + p.rebounding) / 3; // simple average for display/sorting
+  const weightedOverall = (p)=> (p.offense*W.offense) + (p.defense*W.defense) + (p.rebounding*W.rebounding);
 
   const teamTotals = (team) => {
     const t = { offense:0, defense:0, rebounding:0, overall:0 };
     for (const p of team){
       t.offense += p.offense; t.defense += p.defense; t.rebounding += p.rebounding;
-      t.overall += overall(p);
+      t.overall += weightedOverall(p);
     }
     return t;
   };
@@ -624,9 +634,10 @@
     if (!state.groupId) return;
 
     const frag = document.createDocumentFragment();
-    for (const p of state.players){
+    const sorted = state.players.slice().sort((a,b)=>overall(b)-overall(a));
+    for (const p of sorted){
       const item = document.createElement("div");
-      item.className = "playerCard";
+      item.className = "playerCard" + (disabled ? " disabled" : "");
       item.style.cursor = "default";
 
       const meta = document.createElement("div");
@@ -699,13 +710,26 @@
     if (!state.groupId) return;
 
     const frag = document.createDocumentFragment();
-    for (const p of state.players){
+    const sorted = state.players.slice().sort((a,b)=>overall(b)-overall(a));
+    for (const p of sorted){
       const on = state.selectedToday.has(p.id);
+      const need = totalNeeded();
+      const disabled = !on && state.selectedToday.size >= need;
       const item = document.createElement("div");
       item.className = "playerCard";
       item.addEventListener("click", () => {
-        if (state.selectedToday.has(p.id)) state.selectedToday.delete(p.id);
-        else state.selectedToday.add(p.id);
+        const need = totalNeeded();
+        if (state.selectedToday.has(p.id)) {
+          state.selectedToday.delete(p.id);
+          setError("");
+        } else {
+          if (state.selectedToday.size >= need) {
+            setError(`This format needs exactly ${need} players. Unselect someone first.`);
+            return;
+          }
+          state.selectedToday.add(p.id);
+          setError("");
+        }
         refreshCounts();
         // update checkbox state visually
         renderTodayList(); // small list, ok
@@ -735,8 +759,10 @@
   };
 
   const refreshCounts = () => {
+    const need = totalNeeded();
     els.selCount.textContent = String(state.selectedToday.size);
-    els.needCount.textContent = String(totalNeeded());
+    els.needCount.textContent = String(need);
+    if (els.needInline) els.needInline.textContent = String(need);
   };
 
   const renderResults = () => {
@@ -757,12 +783,12 @@
     const k1 = document.createElement("div");
     k1.className = "kpi";
     k1.innerHTML = `<div class="k">Fairness</div><div class="v ${label.cls}">${label.text}</div>
-                    <div class="note" style="margin-top:6px">Balances weighted overall (O/D/R = 40/40/20) and category spreads.</div>`;
+                    <div class="note" style="margin-top:6px">Balances weighted overall (O/D/R = 50/25/25) and category spreads.</div>`;
 
     const k2 = document.createElement("div");
     k2.className = "kpi";
     k2.innerHTML = `<div class="k">Players used</div><div class="v">${res.needed}</div>
-                    <div class="note" style="margin-top:6px">Uses top ${res.needed} selected players to fit the format.</div>`;
+                    <div class="note" style="margin-top:6px">Uses the exact selected players for this format.</div>`;
 
     kpiRow.appendChild(k1); kpiRow.appendChild(k2);
     els.results.appendChild(kpiRow);
@@ -778,7 +804,7 @@
       const head = document.createElement("div");
       head.className = "teamHeader";
       head.innerHTML = `<div class="teamTitle">Team ${idx+1}</div>
-                        <div class="score">Overall ${totals.overall.toFixed(1)}<br/>O ${totals.offense} • D ${totals.defense} • R ${totals.rebounding}</div>`;
+                        <div class="score">Weighted ${totals.overall.toFixed(1)}<br/>O ${totals.offense} • D ${totals.defense} • R ${totals.rebounding}</div>`;
       card.appendChild(head);
 
       const list = document.createElement("div");
@@ -807,14 +833,18 @@
     const needed = teamSize * numTeams;
 
     const selectedPlayers = state.players.filter(p => state.selectedToday.has(p.id));
-    if (selectedPlayers.length < needed) {
-      setError(`Not enough selected players. Need ${needed}, but selected ${selectedPlayers.length}.`);
-      return null;
-    }
+if (selectedPlayers.length !== needed) {
+  if (selectedPlayers.length < needed) {
+    setError(`Select ${needed} players for this format. You selected ${selectedPlayers.length}.`);
+  } else {
+    setError(`Too many selected players. This format needs ${needed}, but you selected ${selectedPlayers.length}.`);
+  }
+  return null;
+}
 
-    // Use top N by overall
-    const roster = selectedPlayers.slice().sort((a,b)=>overall(b)-overall(a)).slice(0, needed);
-    const base = roster.slice().sort((a,b)=>overall(b)-overall(a));
+// Use exactly the selected players, sorted by simple average overall for stability
+const roster = selectedPlayers.slice().sort((a,b)=>overall(b)-overall(a));
+const base = roster.slice();
 
     let bestTeams = null;
     let bestObj = Infinity;
@@ -890,8 +920,8 @@
       setConnectedUI();
 
       state.players = await loadPlayersCloud();
-      // default select all for today
-      state.selectedToday = new Set(state.players.map(p=>p.id));
+      // start with none selected; user will pick exactly what is needed for today
+      state.selectedToday = new Set();
       state.lastResult = null;
       renderPlayers();
       renderTodayList();
@@ -948,7 +978,7 @@
       // realtime refresh should update list; fallback reload:
       state.players = await loadPlayersCloud();
       const ids = new Set(state.players.map(x=>x.id));
-      state.selectedToday = new Set(state.players.map(x=>x.id).filter(id => ids.has(id)));
+      state.selectedToday = new Set(Array.from(state.selectedToday).filter(id=>ids.has(id)));
       renderPlayers();
       renderTodayList();
     } catch(e){
@@ -1016,7 +1046,7 @@
       els.statusText.textContent = "Connecting...";
       try{
         state.players = await loadPlayersCloud();
-        state.selectedToday = new Set(state.players.map(p=>p.id));
+        state.selectedToday = new Set();
         renderPlayers();
         renderTodayList();
         renderResults();
