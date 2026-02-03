@@ -223,6 +223,20 @@
 
       <div class="divider"></div>
       <div class="note">Tip: After you connect once, this device will remember the group and take you straight to Teams next time.</div>
+
+      <div class="divider"></div>
+      <details style="margin-top:4px">
+        <summary style="cursor:pointer;font-weight:900;color:rgba(233,238,255,.9)">Diagnostics</summary>
+        <div class="note" style="margin-top:8px">
+          <div>Supabase configured: <b id="diagHasSupabase">false</b></div>
+          <div style="margin-top:6px">If Join/Create fails, this panel helps identify config/RLS/table issues.</div>
+        </div>
+        <div class="btnRow" style="margin-top:10px">
+          <button id="diagPingBtn" class="ghost" type="button">Test connection</button>
+        </div>
+        <div class="note" id="diagPingOut" style="margin-top:8px"></div>
+      </details>
+
     </section>
 
     <!-- PLAYERS -->
@@ -375,6 +389,11 @@
     joinBtn: document.getElementById("joinBtn"),
     copyInviteBtn: document.getElementById("copyInviteBtn"),
     statusText: document.getElementById("statusText"),
+
+    // Diagnostics
+    diagHasSupabase: document.getElementById("diagHasSupabase"),
+    diagPingBtn: document.getElementById("diagPingBtn"),
+    diagPingOut: document.getElementById("diagPingOut"),
 
     // Players
     pName: document.getElementById("pName"),
@@ -545,7 +564,7 @@
   // =========================
   const ensureSupabase = () => {
     if (!hasSupabase) {
-      setError("Supabase keys are missing. Paste SUPABASE_URL and SUPABASE_ANON_KEY in the file, then redeploy.");
+      setError("Supabase keys are missing or blank. Paste SUPABASE_URL and SUPABASE_ANON_KEY (anon public) in the file, then redeploy.");
       return false;
     }
     return true;
@@ -900,6 +919,27 @@ const base = roster.slice();
     }
   });
 
+
+// Diagnostics: quick test that groups table is reachable
+if (els.diagPingBtn) {
+  els.diagPingBtn.addEventListener("click", async () => {
+    els.diagPingOut.textContent = "";
+    setError("");
+    if (!ensureSupabase()) return;
+    try{
+      // lightweight query
+      const { data, error } = await supa.from("groups").select("id").limit(1);
+      if (error) throw error;
+      els.diagPingOut.textContent = "✅ Connection OK. groups table is reachable.";
+    } catch(e){
+      console.error("Diagnostics ping error:", e);
+      const msg = (e && (e.message || e.error_description)) ? (e.message || e.error_description) : String(e);
+      els.diagPingOut.textContent = "❌ Test failed: " + msg;
+      setError("Diagnostics test failed: " + msg);
+    }
+  });
+}
+
   els.joinBtn.addEventListener("click", async () => {
     setError("");
     if (!ensureSupabase()) return;
@@ -933,7 +973,10 @@ const base = roster.slice();
       els.genCard.style.display = "none";
       els.statusText.textContent = "Connected";
     } catch(e){
-      setError("Join/Create failed. Check Supabase tables (groups, players) and RLS policies.");
+      // Surface the real Supabase error so troubleshooting is easy
+      console.error("Join/Create error:", e);
+      const msg = (e && (e.message || e.error_description)) ? (e.message || e.error_description) : String(e);
+      setError(`Join/Create failed: ${msg}`);
     } finally {
       els.joinBtn.disabled = false;
       els.joinBtn.textContent = "Join / Create";
@@ -1029,6 +1072,7 @@ const base = roster.slice();
   const bootstrap = async () => {
     setError("");
     setConnectedUI();
+    if (els.diagHasSupabase) els.diagHasSupabase.textContent = String(hasSupabase);
 
     // auto-fill group from invite link ?group=
     const url = new URL(window.location.href);
